@@ -71,6 +71,28 @@ function(p99_configure_library target)
     )
 endfunction()
 
+# In-tree executables: on Windows prefer the static library so tests and
+# tools do not depend on locating p99.dll at runtime. A missing DLL on
+# headless CI shows a modal dialog and never reaches main().
+function(p99_link_consumer target)
+    if(WIN32 AND P99_BUILD_STATIC)
+        target_link_libraries(${target} PRIVATE p99_static)
+    else()
+        target_link_libraries(${target} PRIVATE p99::p99)
+        if(WIN32 AND P99_BUILD_SHARED)
+            add_custom_command(TARGET ${target} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    "$<TARGET_FILE:p99_shared>"
+                    "$<TARGET_FILE_DIR:${target}>"
+                COMMENT "Copy p99.dll next to ${target}"
+            )
+        endif()
+    endif()
+    if(UNIX)
+        target_link_libraries(${target} PRIVATE m)
+    endif()
+endfunction()
+
 if(P99_BUILD_SHARED)
     add_library(p99_shared SHARED ${P99_SOURCES})
     add_library(p99::p99 ALIAS p99_shared)
@@ -102,10 +124,7 @@ if(P99_BUILD_TESTS)
     enable_testing()
 
     add_executable(p99_test tests/test_histogram.c)
-    target_link_libraries(p99_test PRIVATE p99::p99)
-    if(UNIX)
-        target_link_libraries(p99_test PRIVATE m)
-    endif()
+    p99_link_consumer(p99_test)
     target_compile_options(p99_test PRIVATE ${P99_COMPILE_OPTIONS})
     set_target_properties(p99_test PROPERTIES
         C_STANDARD 11
@@ -113,13 +132,14 @@ if(P99_BUILD_TESTS)
         C_EXTENSIONS OFF
     )
     add_test(NAME histogram COMMAND p99_test)
+    set_tests_properties(histogram PROPERTIES TIMEOUT 120)
 endif()
 
 # --- Examples --------------------------------------------------------------
 
 if(P99_BUILD_EXAMPLES)
     add_executable(build_histogram examples/build_histogram.c)
-    target_link_libraries(build_histogram PRIVATE p99::p99)
+    p99_link_consumer(build_histogram)
     target_compile_options(build_histogram PRIVATE ${P99_COMPILE_OPTIONS})
     set_target_properties(build_histogram PROPERTIES
         C_STANDARD 11
@@ -132,7 +152,7 @@ endif()
 
 if(P99_BUILD_BENCHMARKS)
     add_executable(p99_benchmark benchmarks/benchmark_histogram.c)
-    target_link_libraries(p99_benchmark PRIVATE p99::p99)
+    p99_link_consumer(p99_benchmark)
     target_compile_options(p99_benchmark PRIVATE ${P99_COMPILE_OPTIONS})
     set_target_properties(p99_benchmark PROPERTIES
         C_STANDARD 11
