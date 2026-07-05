@@ -133,14 +133,14 @@ typedef uint64_t                                            p99_bucket_count_t;
  * embedding.
  */
 typedef struct p99_histogram {
-    uint8_t             has_overflowed;
-    uint8_t             has_min_event_time;
-    uint8_t             has_max_event_time;
-    size_t              event_count;
-    uint64_t            event_time_total;
-    uint64_t            min_event_time;
-    uint64_t            max_event_time;
-    p99_bucket_count_t  buckets[P99_BUCKET_COUNT];
+    uint8_t             has_overflowed;             /**< Indicates whether an arithmetic overflow has occurred. */
+    uint8_t             has_min_event_time;         /**< Indicates whether a minimum event time has been recorded. */
+    uint8_t             has_max_event_time;         /**< Indicates whether a maximum event time has been recorded. */
+    size_t              event_count;                /**< The number of events recorded. */
+    uint64_t            event_time_total;           /**< The total event time in nanoseconds. */
+    uint64_t            min_event_time;             /**< The minimum event time in nanoseconds. */
+    uint64_t            max_event_time;             /**< The maximum event time in nanoseconds. */
+    p99_bucket_count_t  buckets[P99_BUCKET_COUNT];  /**< The bucket counts (power-of-two ranges). */
 } p99_histogram_t;
 
 /* --- Lifecycle -------------------------------------------------------- */

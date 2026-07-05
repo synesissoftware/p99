@@ -77,3 +77,13 @@ jobs:
         run: |
           test -f "${{ runner.temp }}/install/lib/cmake/p99/p99Config.cmake" || \
             test -f "${{ runner.temp }}/install/lib64/cmake/p99/p99Config.cmake"
+
+      - name: Build API documentation
+        if: runner.os == 'Linux' && matrix.build_type == 'Release' && matrix.compact_histogram != 'ON'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen
+          cmake -B build-docs -DCMAKE_BUILD_TYPE=Release -DP99_BUILD_DOCS=ON
+          cmake --build build-docs --target p99_docs
+          test -f build-docs/docs/html/index.html

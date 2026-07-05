@@ -2,6 +2,7 @@
 
 build/
 build-compact/
+build-docs/
 build-test/
 cmake-build-*/
 
