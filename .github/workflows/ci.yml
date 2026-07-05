@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+    - dev
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build_type: Debug
+          - os: ubuntu-latest
+            build_type: Release
+          - os: macos-latest
+            build_type: Debug
+          - os: macos-latest
+            build_type: Release
+          - os: windows-latest
+            build_type: Debug
+            generator: Ninja
+          - os: windows-latest
+            build_type: Release
+            generator: Ninja
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        shell: bash
+        run: |
+          generator_args=()
+          if [ -n "${{ matrix.generator }}" ]; then
+            generator_args=(-G "${{ matrix.generator }}")
+          fi
+          cmake -B build "${generator_args[@]}" \
+            -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" \
+            -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install"
+
+      - name: Build
+        run: cmake --build build --config ${{ matrix.build_type }}
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure --build-config ${{ matrix.build_type }}
+
+      - name: Install
+        run: cmake --install build --prefix "${{ runner.temp }}/install"
+
+      - name: Verify pkg-config file
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          test -f "${{ runner.temp }}/install/lib/pkgconfig/p99.pc" || \
+            test -f "${{ runner.temp }}/install/lib64/pkgconfig/p99.pc"
+
+      - name: Verify CMake package config
+        shell: bash
+        run: |
+          test -f "${{ runner.temp }}/install/lib/cmake/p99/p99Config.cmake" || \
+            test -f "${{ runner.temp }}/install/lib64/cmake/p99/p99Config.cmake"

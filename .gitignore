@@ -1,0 +1,31 @@
+# Build artifacts
+
+build/
+build-compact/
+cmake-build-*/
+
+# Editor / IDE
+
+.idea/
+.vscode/
+
+*.swp
+*~
+
+# macOS
+
+.DS_Store
+
+# Compiled objects
+
+*.a
+*.dll
+*.dylib
+*.o
+*.so
+
+# Test / example binaries
+
+build_histogram
+p99_benchmark
+p99_test

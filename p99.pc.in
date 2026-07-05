@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
+
+Name: p99
+Description: Low-cost generation of performance percentiles (p50, p90, p99, etc.)
+Version: @PROJECT_VERSION@
+URL: https://github.com/synesissoftware/p99
+Libs: -L${libdir} -lp99
+Cflags: @P99_PC_CFLAGS@
