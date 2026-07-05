@@ -219,6 +219,7 @@ p99_histogram_event_count(p99_histogram_t const* histogram);
 /**
  * @brief Return the total event time in nanoseconds.
  *
+ * @param[in] histogram The histogram to query;
  * @param[out] total  Receives the total when the function returns
  *   @ref P99_TRUE;
  *
@@ -244,6 +245,7 @@ p99_histogram_has_overflowed(p99_histogram_t const* histogram);
 /**
  * @brief Return the minimum observed event time.
  *
+ * @param[in] histogram The histogram to query;
  * @param[out] min Receives the minimum when the function returns
  *   @ref P99_TRUE;
  *
@@ -259,6 +261,7 @@ p99_histogram_min_event_time(
 /**
  * @brief Return the maximum observed event time.
  *
+ * @param[in] histogram The histogram to query;
  * @param[out] max Receives the maximum when the function returns
  *   @ref P99_TRUE;
  *
@@ -274,6 +277,8 @@ p99_histogram_max_event_time(
 /**
  * @brief Return the count of events in bucket @p index.
  *
+ * @param[in] histogram The histogram to query;
+ * @param[in] index The index of the bucket to return the count of;
  * @param[out] value Receives the bucket count when the function returns
  *   @ref P99_TRUE;
  *
@@ -302,6 +307,8 @@ p99_histogram_buckets(p99_histogram_t const* histogram);
  *
  * @p percentile is clamped to `[0.0, 100.0]`.
  *
+ * @param[in] histogram The histogram to query;
+ * @param[in] percentile The percentile to return the approximated duration for;
  * @param[out] value Receives the approximated duration in nanoseconds;
  *
  * @return @ref P99_TRUE if the histogram contains one or more events;
