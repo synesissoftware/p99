@@ -202,13 +202,13 @@ clamp_percentile(double percentile)
 
 /* --- Lifecycle -------------------------------------------------------- */
 
-void
+P99_CALL(void)
 p99_histogram_init(p99_histogram_t* histogram)
 {
     memset(histogram, 0, sizeof(p99_histogram_t));
 }
 
-void
+P99_CALL(void)
 p99_histogram_clear(p99_histogram_t* histogram)
 {
     p99_histogram_init(histogram);
@@ -216,7 +216,7 @@ p99_histogram_clear(p99_histogram_t* histogram)
 
 /* --- Recording -------------------------------------------------------- */
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_push_event_time_ns(
     p99_histogram_t* histogram
 ,   uint64_t time_in_ns
@@ -250,7 +250,7 @@ p99_histogram_push_event_time_ns(
     return P99_TRUE;
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_push_event_time_us(
     p99_histogram_t* histogram
 ,   uint64_t time_in_us
@@ -269,7 +269,7 @@ p99_histogram_push_event_time_us(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_push_event_time_ms(
     p99_histogram_t* histogram
 ,   uint64_t time_in_ms
@@ -288,7 +288,7 @@ p99_histogram_push_event_time_ms(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_push_event_time_s(
     p99_histogram_t* histogram
 ,   uint64_t time_in_s
@@ -309,13 +309,13 @@ p99_histogram_push_event_time_s(
 
 /* --- Statistics ------------------------------------------------------- */
 
-size_t
+P99_CALL(size_t)
 p99_histogram_event_count(p99_histogram_t const* histogram)
 {
     return histogram->event_count;
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_event_time_total(
     p99_histogram_t const* histogram
 ,   uint64_t* total
@@ -331,19 +331,19 @@ p99_histogram_event_time_total(
     return P99_TRUE;
 }
 
-uint64_t
+P99_CALL(uint64_t)
 p99_histogram_event_time_total_raw(p99_histogram_t const* histogram)
 {
     return histogram->event_time_total;
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_has_overflowed(p99_histogram_t const* histogram)
 {
     return histogram->has_overflowed;
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_min_event_time(
     p99_histogram_t const* histogram
 ,   uint64_t* min
@@ -359,7 +359,7 @@ p99_histogram_min_event_time(
     return P99_TRUE;
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_max_event_time(
     p99_histogram_t const* histogram
 ,   uint64_t* max
@@ -375,7 +375,7 @@ p99_histogram_max_event_time(
     return P99_TRUE;
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_bucket_value(
     p99_histogram_t const* histogram
 ,   size_t index
@@ -392,7 +392,7 @@ p99_histogram_bucket_value(
     return P99_TRUE;
 }
 
-p99_bucket_count_t const*
+P99_CALL(p99_bucket_count_t const*)
 p99_histogram_buckets(p99_histogram_t const* histogram)
 {
     return histogram->buckets;
@@ -400,7 +400,7 @@ p99_histogram_buckets(p99_histogram_t const* histogram)
 
 /* --- Percentiles ------------------------------------------------------ */
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_percentile(
     p99_histogram_t const* histogram
 ,   double percentile
@@ -504,7 +504,7 @@ p99_histogram_value_at_percentile(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p50(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -523,7 +523,7 @@ p99_histogram_value_at_p50(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p75(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -542,7 +542,7 @@ p99_histogram_value_at_p75(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p90(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -561,7 +561,7 @@ p99_histogram_value_at_p90(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p95(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -580,7 +580,7 @@ p99_histogram_value_at_p95(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p99(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -599,7 +599,7 @@ p99_histogram_value_at_p99(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p99_5(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -618,7 +618,7 @@ p99_histogram_value_at_p99_5(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p99_9(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -637,7 +637,7 @@ p99_histogram_value_at_p99_9(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p99_99(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -656,7 +656,7 @@ p99_histogram_value_at_p99_99(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p99_999(
     p99_histogram_t const* histogram
 ,   uint64_t* value
@@ -675,7 +675,7 @@ p99_histogram_value_at_p99_999(
     );
 }
 
-p99_truthy_t
+P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p99_999_9(
     p99_histogram_t const* histogram
 ,   uint64_t* value
