@@ -17,6 +17,12 @@ jobs:
             build_type: Debug
           - os: ubuntu-latest
             build_type: Release
+          - os: ubuntu-latest
+            build_type: Debug
+            compact_histogram: ON
+          - os: ubuntu-latest
+            build_type: Release
+            compact_histogram: ON
           - os: macos-latest
             build_type: Debug
           - os: macos-latest
@@ -40,9 +46,14 @@ jobs:
           if [ -n "${{ matrix.generator }}" ]; then
             generator_args=(-G "${{ matrix.generator }}")
           fi
+          compact_args=()
+          if [ -n "${{ matrix.compact_histogram }}" ]; then
+            compact_args=(-DP99_COMPACT_HISTOGRAM="${{ matrix.compact_histogram }}")
+          fi
           cmake -B build "${generator_args[@]}" \
             -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" \
-            -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install"
+            -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+            "${compact_args[@]}"
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }}

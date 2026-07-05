@@ -1,0 +1,69 @@
+# Doxyfile for p99 — configured by CMake (@ONLY).
+
+PROJECT_NAME           = "p99"
+PROJECT_NUMBER         = "@PROJECT_VERSION@"
+PROJECT_BRIEF          = "Low-cost performance percentile histogram"
+OUTPUT_DIRECTORY       = @DOXYGEN_OUTPUT_DIR@
+CREATE_SUBDIRS         = NO
+
+# --- Input --------------------------------------------------------------
+
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include/p99/p99.h \
+                         @CMAKE_CURRENT_SOURCE_DIR@/docs/mainpage.md
+INPUT_ENCODING         = UTF-8
+FILE_PATTERNS          = *.h *.md
+RECURSIVE              = NO
+USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/docs/mainpage.md
+
+# --- Preprocessor -------------------------------------------------------
+
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = YES
+EXPAND_ONLY_PREDEF     = YES
+PREDEFINED             = DOXYGEN \
+                         "P99_CALL(x)=x" \
+                         "P99_API_VISIBILITY=" \
+                         "P99_STATIC=" \
+                         "P99_SHARED_BUILD="
+
+# --- Extraction ---------------------------------------------------------
+
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXTRACT_LOCAL_CLASSES  = NO
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+HIDE_FRIEND_COMPOUNDS  = YES
+INTERNAL_DOCS          = NO
+WARN_IF_UNDOCUMENTED   = YES
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+
+# --- Output -------------------------------------------------------------
+
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+GENERATE_XML           = NO
+GENERATE_MAN           = NO
+
+# --- Appearance ---------------------------------------------------------
+
+JAVADOC_BANNER         = NO
+MARKDOWN_SUPPORT       = YES
+TAB_SIZE               = 4
+OPTIMIZE_OUTPUT_FOR_C  = YES
+SOURCE_BROWSER         = NO
+VERBATIM_HEADERS       = YES
+SHOW_GROUPED_MEMB_INC  = YES
+SORT_MEMBER_DOCS       = YES
+SORT_BRIEF_DOCS        = YES
+
+# --- Index --------------------------------------------------------------
+
+ALPHABETICAL_INDEX     = YES
+
+# --- Diagrams -----------------------------------------------------------
+
+HAVE_DOT               = NO

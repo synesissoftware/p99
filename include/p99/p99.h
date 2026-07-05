@@ -7,8 +7,7 @@
  * percentiles (p50, p90, p99, etc.).
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
- *   Systems
- * @license BSD-3-Clause
+ *   Systems. Licensed under the 3-clause BSD License.
  */
 
 #ifndef P99_H
@@ -106,8 +105,15 @@ typedef int p99_truthy_t;
  * when compiling the library and all translation units that embed
  * @ref p99_histogram_t) to store bucket counts as 32-bit integers instead
  * of 64-bit (296 bytes vs 552 bytes on 64-bit platforms). Each bucket count
- * is limited to `UINT32_MAX`.
+ * is limited to `UINT32_MAX`. Doing so reduces the footprint of the
+ * histogram to 296 bytes on 64-bit platforms, and in doing so reduces the
+ * performance costs by reduing the number of cache line misses; the cost is
+ * in resolution, but for many use cases this is acceptable.
  */
+#ifdef DOXYGEN
+# define P99_COMPACT_HISTOGRAM
+# undef P99_COMPACT_HISTOGRAM
+#endif
 #ifdef P99_COMPACT_HISTOGRAM
 typedef uint32_t                                            p99_bucket_count_t;
 #else
@@ -122,8 +128,8 @@ typedef uint64_t                                            p99_bucket_count_t;
  *
  * Tracks event durations with nanosecond precision across 64 logarithmic
  * power-of-two buckets. The structure is compact (552 bytes on 64-bit
- * platforms with default bucket counts; 296 bytes with
- * @ref P99_COMPACT_HISTOGRAM) and suitable for stack allocation or
+ * platforms with default bucket counts; 296 bytes when
+ * `P99_COMPACT_HISTOGRAM` is defined) and suitable for stack allocation or
  * embedding.
  */
 typedef struct p99_histogram {

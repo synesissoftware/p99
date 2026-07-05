@@ -17,6 +17,7 @@ option(P99_BUILD_STATIC "Build static library" ON)
 option(P99_BUILD_TESTS  "Build unit tests" ON)
 option(P99_BUILD_EXAMPLES "Build example programs" ON)
 option(P99_BUILD_BENCHMARKS "Build benchmark programs" ON)
+option(P99_BUILD_DOCS "Build API documentation with Doxygen" OFF)
 option(P99_COMPACT_HISTOGRAM "Use compact histogram layout (<=512 bytes)" OFF)
 
 if(NOT P99_BUILD_SHARED AND NOT P99_BUILD_STATIC)
@@ -158,6 +159,27 @@ if(P99_BUILD_BENCHMARKS)
         C_STANDARD 11
         C_STANDARD_REQUIRED ON
         C_EXTENSIONS OFF
+    )
+endif()
+
+# --- Documentation (Doxygen) ---------------------------------------------
+
+if(P99_BUILD_DOCS)
+    find_package(Doxygen REQUIRED)
+
+    set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/docs")
+
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+        @ONLY
+    )
+
+    add_custom_target(p99_docs
+        COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_BINARY_DIR}/Doxyfile"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMENT "Generating p99 API documentation (Doxygen)"
+        VERBATIM
     )
 endif()
 

@@ -27,6 +27,7 @@ Low-cost generation of performance percentiles (p50, p90, p99, p99.9, etc.).
   - [Minimal Example](#minimal-example)
 - [Examples](#examples)
 - [Benchmarks](#benchmarks)
+- [API documentation](#api-documentation)
 - [Project Information](#project-information)
   - [Where to get help](#where-to-get-help)
   - [Contribution guidelines](#contribution-guidelines)
@@ -268,6 +269,21 @@ isolated benchmark harness, mains power). Reconfigure with
 struct; per-bucket counts limited to `UINT32_MAX`).
 
 Benchmarks are not installed; they are for local development only.
+
+
+## API documentation
+
+HTML reference for the public C API (`include/p99/p99.h`) is generated with
+[Doxygen](https://www.doxygen.org/):
+
+```bash
+cmake -B build -DP99_BUILD_DOCS=ON
+cmake --build build --target p99_docs
+open build/docs/html/index.html
+```
+
+Requires Doxygen on `PATH` (`find_package(Doxygen)`). Documentation is not
+installed; it is for local development and release publishing.
 
 
 ## Project Information
