@@ -7,6 +7,10 @@
  * @license BSD-3-Clause
  */
 
+#if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
+# define _POSIX_C_SOURCE 200809L
+#endif
+
 #include <p99/p99.h>
 
 #include <stdio.h>
