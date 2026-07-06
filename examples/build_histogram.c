@@ -147,7 +147,7 @@ main(void)
         ,   label_width
         ,   "event_count:"
         ,   value_width
-        ,   p99_histogram_event_count(&histogram)
+        ,   (unsigned long long)p99_histogram_event_count(&histogram)
         );
 
         if (p99_histogram_has_overflowed(&histogram))
@@ -170,7 +170,7 @@ main(void)
             ,   label_width
             ,   "event_time_total:"
             ,   value_width
-            ,   total
+            ,   (unsigned long long)total
             );
         }
 
@@ -185,7 +185,7 @@ main(void)
                 ,   label_width
                 ,   "min_event_time:"
                 ,   value_width
-                ,   min
+                ,   (unsigned long long)min
                 );
             }
             if (p99_histogram_max_event_time(&histogram, &max))
@@ -195,7 +195,7 @@ main(void)
                 ,   label_width
                 ,   "max_event_time:"
                 ,   value_width
-                ,   max
+                ,   (unsigned long long)max
                 );
             }
         }
@@ -209,8 +209,12 @@ main(void)
                                                                             \
             if (fn(&histogram, &value))                                     \
             {                                                               \
-                printf("  %-18s %*llu ns\n", label, value_width,            \
-                       value);                                              \
+                printf(                                                     \
+                    "  %-18s %*llu ns\n"                                    \
+                ,   label                                                   \
+                ,   value_width                                             \
+                ,   (unsigned long long)value                               \
+            );                                                              \
             }                                                               \
             else                                                            \
             {                                                               \
@@ -219,8 +223,12 @@ main(void)
 
             if (p99_histogram_value_at_percentile(&histogram, 50.0, &value))
             {
-                printf("  %-18s %*llu ns\n", "p50 (f64):", value_width,
-                       value);
+                printf(
+                    "  %-18s %*llu ns\n"
+                ,   "p50 (f64):"
+                ,   value_width
+                ,   (unsigned long long)value
+                );
             }
 
             PRINT_PERCENTILE("p50 (integer):", p99_histogram_value_at_p50);

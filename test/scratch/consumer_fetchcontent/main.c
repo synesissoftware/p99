@@ -15,8 +15,8 @@ main(void)
     {
         printf(
             "p50: %llu ns (%llu events)\n"
-        ,   value
-        ,   p99_histogram_event_count(&histogram)
+        ,   (unsigned long long)value
+        ,   (unsigned long long)p99_histogram_event_count(&histogram)
         );
 
         return 0;

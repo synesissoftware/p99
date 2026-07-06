@@ -8,13 +8,13 @@ high-resolution percentiles in real time.
 
 ## Design
 
-- **64 logarithmic buckets** spaced as powers of two (`P99_BUCKET_COUNT`).
+- **64 logarithmic buckets** spaced as powers of two (`P99_BUCKET_COUNT`);
 - **Zero heap allocation** — `p99_histogram_t` is embeddable on the stack
   (552 bytes by default on 64-bit platforms; 296 bytes with
-  `P99_COMPACT_HISTOGRAM`).
+  `P99_COMPACT_HISTOGRAM`);
 - **Branchless bucket indexing** via leading-zero count on supported
-  platforms.
-- **Linear interpolation** within bucket boundaries for percentile queries.
+  platforms;
+- **Linear interpolation** within bucket boundaries for percentile queries;
 
 ## Predicate returns
 
