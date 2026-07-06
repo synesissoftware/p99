@@ -164,8 +164,8 @@ assert_scalar_cmp_u64(
     ,   expected_comparand_string
     ,   comparand_string
     ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
+    ,   expected
+    ,   actual
     );
 
     ++g_tests_failed;
@@ -196,8 +196,8 @@ assert_scalar_eq_approx_u64(
     ,   func
     ,   expected_comparand_string
     ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
+    ,   expected
+    ,   actual
     ,   tolerance
     );
 
