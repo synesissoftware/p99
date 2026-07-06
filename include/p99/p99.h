@@ -27,6 +27,14 @@
  * The patch version number of **p99**.
  */
 
+/** @def P99_VER_ALPHABETA
+ * Pre-release marker in the low byte of @ref P99_VER.
+ *
+ * `0xFF` for a stable (non-alpha, non-beta, non-rc) release; otherwise a
+ * range-based value: 0x40-0x7F for alpha; 0x80-0xBF for beta; 0xC0-0xFE for
+ * release-candidate.
+ */
+
 /** @def P99_VER
  * The current composite version number of **p99**.
  */

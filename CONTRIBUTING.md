@@ -108,8 +108,9 @@ before merge.
   text only; code lines are not limited);
 - Predicate returns use `p99_truthy_t` (`int`); the public header does not
   require C99 `<stdbool.h>`;
-- Version bumps: update `P99_VER_*` in **p99.h** and **CMakeLists.txt**
-  `PROJECT_VERSION` together;
+- Version bumps: update `P99_VER_*` in **include/p99/p99.h** only (CMake
+  reads `P99_VER_MAJOR`, `P99_VER_MINOR`, and `P99_VER_PATCH` from there);
+  set `P99_VER_ALPHABETA` to `0xFF` for stable releases;
 
 
 ## Documentation

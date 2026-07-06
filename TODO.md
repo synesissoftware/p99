@@ -68,8 +68,8 @@
 * [ ] Define and implement `event_count` overflow policy (`size_t`
   increment is currently unchecked; compact layout checks per-bucket
   `UINT32_MAX` only);
-* [ ] Keep `P99_VER_*` header macros in sync with CMake `PROJECT_VERSION`
-  (or document the manual update process);
+* [x] Keep `P99_VER_*` header macros in sync with CMake `PROJECT_VERSION`
+  (CMake parses **include/p99/p99.h**; see Synesis sibling libraries);
 
 ### Platform
 

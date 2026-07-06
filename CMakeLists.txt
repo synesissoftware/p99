@@ -1,11 +1,45 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(p99
-    VERSION 0.0.1
     DESCRIPTION "Low-cost generation of performance percentiles (p50, p90, p99, etc.)"
     HOMEPAGE_URL "https://github.com/synesissoftware/p99"
     LANGUAGES C
 )
+
+string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
+string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
+
+# Version: canonical values in include/p99/p99.h (Synesis convention).
+set(RX_PROJ_TAG "${PROJECT_NAME_UPPER}")
+set(RX_WS "[ \t]")
+file(READ
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME_LOWER}/${PROJECT_NAME_LOWER}.h"
+    _p99_header
+)
+string(REGEX MATCH
+    "#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_MAJOR${RX_WS}+([0-9]+)"
+    _p99_ver_major_dummy ${_p99_header}
+)
+set(_P99_VERSION_MAJOR ${CMAKE_MATCH_1})
+string(REGEX MATCH
+    "#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_MINOR${RX_WS}+([0-9]+)"
+    _p99_ver_minor_dummy ${_p99_header}
+)
+set(_P99_VERSION_MINOR ${CMAKE_MATCH_1})
+string(REGEX MATCH
+    "#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_(PATCH|REVISION)${RX_WS}+([0-9]+)"
+    _p99_ver_patch_dummy ${_p99_header}
+)
+set(_P99_VERSION_PATCH ${CMAKE_MATCH_2})
+
+set(PROJECT_VERSION_MAJOR ${_P99_VERSION_MAJOR})
+set(PROJECT_VERSION_MINOR ${_P99_VERSION_MINOR})
+set(PROJECT_VERSION_PATCH ${_P99_VERSION_PATCH})
+set(PROJECT_VERSION
+    "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
+)
+
+message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
 
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
