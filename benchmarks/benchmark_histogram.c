@@ -322,6 +322,78 @@ BENCHMARK_value_at_p99_99_wide(void)
     benchmark_sink_u64(value);
 }
 
+static void
+BENCHMARK_all_named_percentiles_wide(void)
+{
+    uint64_t value;
+
+    p99_histogram_value_at_p50(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p75(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p90(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p95(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_5(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_9(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_99(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_999(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_999_9(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+}
+
+static void
+BENCHMARK_all_floating_percentiles_wide(void)
+{
+    uint64_t value;
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 50.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 75.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 90.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 95.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.5, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.9, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.99, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.999, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.9999, &value);
+    benchmark_sink_u64(value);
+}
+
 /* --- Main ------------------------------------------------------------- */
 
 int
@@ -439,6 +511,20 @@ main(void)
             100000,
             NULL,
             BENCHMARK_value_at_p99_99_wide,
+        },
+        {
+            "all named percentiles (p50..p99.9999) [100k wide-range events]",
+            1000,
+            100000,
+            NULL,
+            BENCHMARK_all_named_percentiles_wide,
+        },
+        {
+            "all floating percentiles (50.0..99.9999) [100k wide-range events]",
+            1000,
+            100000,
+            NULL,
+            BENCHMARK_all_floating_percentiles_wide,
         },
     };
 
