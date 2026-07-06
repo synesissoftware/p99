@@ -14,6 +14,7 @@
 * CMake build with static and shared library targets; `MSVC_USE_MT` for `/MT`;
 * Windows DLL (`p99.def`, `DllGetVersion`, version resource);
 * pkg-config (`p99.pc`) and CMake package config (`find_package(p99)`);
+* consumer integration — `FetchContent` and vcpkg overlay port (`vcpkg/ports/p99`, `test/scratch/consumer_fetchcontent`);
 * C unit tests (CTest), C example (`build_histogram`), and hand-rolled benchmarks (`p99_benchmark`);
 * Doxygen API documentation (`P99_BUILD_DOCS`, `p99_docs` target);
 * Synesis-standard CMake helper scripts (`prepare_cmake.sh`, `build_cmake.sh`, `clean_cmake.sh`, `remove_cmake_artefacts.sh`, `ctest_cmake.sh`, `run_all_examples.sh`, `run_all_benchmarks.sh`);

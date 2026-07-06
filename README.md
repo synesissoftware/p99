@@ -20,6 +20,8 @@ Low-cost generation of performance percentiles (p50, p90, p99, p99.9, etc.).
 - [Installation](#installation)
 - [Using the Library](#using-the-library)
   - [CMake](#cmake)
+    - [FetchContent](#fetchcontent)
+    - [Via vcpkg](#via-vcpkg)
   - [pkg-config](#pkg-config)
   - [Manual linking](#manual-linking)
 - [API Overview](#api-overview)
@@ -155,6 +157,80 @@ When building from a local checkout without installing:
 ```cmake
 add_subdirectory(path/to/p99)
 target_link_libraries(myapp PRIVATE p99::p99)
+```
+
+Disable **p99**'s own tests, examples, and benchmarks when embedding:
+
+```cmake
+set(P99_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+add_subdirectory(path/to/p99)
+target_link_libraries(myapp PRIVATE p99::p99)
+```
+
+#### FetchContent
+
+Download **p99** at configure time (no system install and no submodule):
+
+```cmake
+cmake_minimum_required(VERSION 3.16)
+project(myapp C)
+
+include(FetchContent)
+
+set(P99_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    p99
+    GIT_REPOSITORY https://github.com/synesissoftware/p99.git
+    GIT_TAG        0.1.0
+)
+FetchContent_MakeAvailable(p99)
+
+add_executable(myapp main.c)
+target_link_libraries(myapp PRIVATE p99::p99)
+```
+
+Pin `GIT_TAG` to a [release tag](https://github.com/synesissoftware/p99/releases)
+or a commit SHA for reproducible builds. A local smoke consumer lives under
+[**test/scratch/consumer_fetchcontent**](test/scratch/consumer_fetchcontent).
+
+#### Via vcpkg
+
+An overlay port ships in [**vcpkg/ports/p99**](vcpkg/ports/p99/) (see
+[**vcpkg/README.md**](vcpkg/README.md)). Install into your vcpkg instance:
+
+```bash
+/path/to/vcpkg install p99 --overlay-ports=/path/to/p99/vcpkg/ports
+```
+
+For the latest **master** (instead of the pinned port version):
+
+```bash
+/path/to/vcpkg install p99 --overlay-ports=/path/to/p99/vcpkg/ports --head
+```
+
+Configure your project with the vcpkg toolchain file, then:
+
+```cmake
+cmake_minimum_required(VERSION 3.16)
+project(myapp C)
+
+find_package(p99 CONFIG REQUIRED)
+
+add_executable(myapp main.c)
+target_link_libraries(myapp PRIVATE p99::p99)
+```
+
+Example:
+
+```bash
+cmake -B _build -S . \
+  -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build _build
 ```
 
 ### pkg-config

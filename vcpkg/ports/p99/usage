@@ -1,0 +1,9 @@
+The package provides CMake targets:
+
+    find_package(p99 CONFIG REQUIRED)
+    target_link_libraries(main PRIVATE p99::p99)
+
+pkg-config is also installed as **p99.pc**.
+
+When using the compact histogram layout, enable **P99_COMPACT_HISTOGRAM** on
+your targets (the vcpkg port builds the default 552-byte layout).

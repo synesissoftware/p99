@@ -92,7 +92,9 @@
 
 ### Consumer integration
 
-* [ ] vcpkg overlay port and/or `FetchContent` consumer sample;
+* [x] vcpkg overlay port and/or `FetchContent` consumer sample (see
+  [vcpkg/README.md](./vcpkg/README.md) and
+  [test/scratch/consumer_fetchcontent](./test/scratch/consumer_fetchcontent/));
 * [x] `CONTRIBUTING.md` and release/versioning policy;
 
 ### Documentation and conventions

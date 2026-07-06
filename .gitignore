@@ -1,15 +1,18 @@
 # Build artifacts
 
-_build/
-build/
-build-compact/
-build-cxx/
-build-docs/
-build-refactor/
-build-san/
-build-test/
-build-ver/
+/_build/
+/build/
+/build-compact/
+/build-cpp/
+/build-cxx/
+/build-docs/
+/build-refactor/
+/build-san/
+/build-test/
+/build-ver/
 cmake-build-*/
+/scratch/
+test/scratch/**/_build/
 
 # Editor / IDE
 

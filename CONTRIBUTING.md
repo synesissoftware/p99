@@ -118,6 +118,7 @@ before merge.
 When adding or changing behaviour, update as appropriate:
 
 - [README.md](./README.md) — overview, building, API summary;
+- [vcpkg/README.md](./vcpkg/README.md) — overlay port install and maintainer notes;
 - [CHANGES.md](./CHANGES.md) — release notes (not the backlog);
 - [TODO.md](./TODO.md) — planned work and deferrals;
 - [ABI.md](./ABI.md) — layout and ABI stability;
