@@ -3,8 +3,10 @@
 _build/
 build/
 build-compact/
+build-cxx/
 build-docs/
 build-refactor/
+build-san/
 build-test/
 cmake-build-*/
 
