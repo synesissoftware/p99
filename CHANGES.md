@@ -7,11 +7,19 @@
 
 * C implementation of the p99 performance percentile histogram;
 * 64-bucket logarithmic histogram with nanosecond precision;
-* Percentile queries (p50, p75, p90, p95, p99, p99.5, p99.9, p99.99, p99.999, p99.9999, and arbitrary floating-point percentiles);
-* CMake build system with static and shared library targets;
+* percentile queries (p50, p75, p90, p95, p99, p99.5, p99.9, p99.99, p99.999, p99.9999, and arbitrary floating-point percentiles);
+* optional compact layout (`P99_COMPACT_HISTOGRAM`: 296 bytes vs 552 bytes on 64-bit; `uint32_t` bucket counts);
+* public API uses `p99_truthy_t` (`int`); struct holds `has_overflowed` only (min/max validity follows `event_count`);
+* portable 64/128-bit arithmetic and bit-scan helpers (`p99_portable.h`);
+* CMake build with static and shared library targets; `MSVC_USE_MT` for `/MT`;
+* Windows DLL (`p99.def`, `DllGetVersion`, version resource);
 * pkg-config (`p99.pc`) and CMake package config (`find_package(p99)`);
-* Unit tests and example program;
-* Hand-rolled performance benchmarks (`p99_benchmark`);
+* C unit tests (CTest), C example (`build_histogram`), and hand-rolled benchmarks (`p99_benchmark`);
+* header-only C++ wrapper (`include/p99/p99.hpp`, `p99::histogram`);
+* C++ unit tests (`p99_test_cxx`) and example (`build_histogram_cxx`);
+* Doxygen API documentation (`P99_BUILD_DOCS`, `p99_docs` target);
+* Synesis-standard CMake helper scripts (`prepare_cmake.sh`, `build_cmake.sh`, `clean_cmake.sh`, `remove_cmake_artefacts.sh`, `ctest_cmake.sh`, `run_all_examples.sh`, `run_all_benchmarks.sh`);
+* continuous integration — Ubuntu (default and compact), macOS, Windows MinGW and MSVC; unit tests; Release benchmark smoke-run; Doxygen on Linux Release;
 
 
 <!-- ########################### end of file ########################### -->
