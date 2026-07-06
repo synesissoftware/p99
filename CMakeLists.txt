@@ -1,3 +1,15 @@
+# ######################################################################## #
+# File:     CMakeLists.txt
+#
+# Purpose:  Top-level CMake lists file for p99
+#
+# Created:  4th July 2026
+# Updated:  6th July 2026
+#
+# Home:     https://github.com/synesissoftware/p99
+#
+# ######################################################################## #
+
 cmake_minimum_required(VERSION 3.16)
 
 project(p99

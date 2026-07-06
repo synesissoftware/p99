@@ -2,6 +2,11 @@
  * @file benchmark_histogram.c
  * @brief Performance benchmarks for the p99 histogram.
  *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 4th July 2026
+ * Updated: 6th July 2026
+ *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
  * @license BSD-3-Clause

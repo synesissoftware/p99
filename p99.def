@@ -5,6 +5,11 @@
 ; Lists the stable public C API from include/p99/p99.h. Internal helpers
 ; (e.g. bucket_index / bucket_range) are intentionally omitted.
 ;
+; Home:    https://github.com/synesissoftware/p99
+;
+; Created: 4th July 2026
+; Updated: 6th July 2026
+;
 ; Copyright (c) 2026, Matthew Wilson and Synesis Information Systems
 ; BSD-3-Clause
 

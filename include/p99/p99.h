@@ -6,8 +6,14 @@
  * durations (typically in nanoseconds) and querying high-resolution
  * percentiles (p50, p90, p99, etc.).
  *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 4th July 2026
+ * Updated: 6th July 2026
+ *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
- *   Systems. Licensed under the 3-clause BSD License.
+ *   Systems
+ * @license BSD-3-Clause
  */
 
 #ifndef P99_H

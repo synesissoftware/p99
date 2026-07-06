@@ -100,7 +100,8 @@
 ### Documentation and conventions
 
 * [ ] DOC_76 comment-width checker (76 columns for comments only);
-* [ ] Align file banner style with Synesis sibling libraries (if desired);
+* [x] Align file banner style with Synesis sibling libraries (hybrid Doxygen
+  banners with Home / Created / Updated; see **include/p99/p99.h**);
 * [x] Complete README API overview table (`bucket_value`, `buckets`, etc.);
 * [ ] Fix minor `p99.h` doc typo (`reduing` → `reducing`);
 * [ ] Complete Doxygen `@param` coverage for warning-free doc builds;
