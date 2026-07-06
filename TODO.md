@@ -38,7 +38,8 @@
 
 ### Other build systems
 
-* [ ] Meson build (`meson.build`, matching CMake targets/tests/examples);
+* [ ] ⏸️ Meson build (`meson.build`, matching CMake
+  targets/tests/examples); deferred past v0.1.0;
 
 ### Continuous integration
 
@@ -58,6 +59,9 @@
 
 ### ABI and correctness
 
+* [x] Simplify struct flags — `has_min_event_time` / `has_max_event_time`
+  removed; min/max validity follows `event_count` (layout still 552 / 296
+  B on 64-bit);
 * [ ] Document ABI/layout stability policy for 1.x (public
   `p99_histogram_t` is an ABI contract);
 * [ ] Define and implement `event_count` overflow policy (`size_t`
@@ -73,13 +77,13 @@
 
 ### Post-1.0
 
-* [ ] Histogram merge;
-* [ ] Histogram serialisation;
+* [ ] ⏸️ Histogram merge; deferred past v0.1.0;
+* [ ] ⏸️ Histogram serialisation; deferred past v1.0;
 
 
 ## Performance improvements
 
-* [ ] binary scaling;
+* [ ] ⏸️ binary scaling; deferred past v0.1.0;
 * [ ] multi-percentile retrieval;
 
 
