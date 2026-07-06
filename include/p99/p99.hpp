@@ -4,6 +4,11 @@
  *
  * Header-only facade over @ref p99.h. Requires a C++ compiler.
  *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 6th July 2026
+ * Updated: 6th July 2026
+ *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems. Licensed under the 3-clause BSD License.
  */
