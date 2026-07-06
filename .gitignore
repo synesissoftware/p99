@@ -4,6 +4,7 @@ _build/
 build/
 build-compact/
 build-docs/
+build-refactor/
 build-test/
 cmake-build-*/
 

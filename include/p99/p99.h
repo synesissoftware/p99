@@ -134,8 +134,6 @@ typedef uint64_t                                            p99_bucket_count_t;
  */
 typedef struct p99_histogram {
     uint8_t             has_overflowed;             /**< Indicates whether an arithmetic overflow has occurred. */
-    uint8_t             has_min_event_time;         /**< Indicates whether a minimum event time has been recorded. */
-    uint8_t             has_max_event_time;         /**< Indicates whether a maximum event time has been recorded. */
     size_t              event_count;                /**< The number of events recorded. */
     uint64_t            event_time_total;           /**< The total event time in nanoseconds. */
     uint64_t            min_event_time;             /**< The minimum event time in nanoseconds. */

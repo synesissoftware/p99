@@ -55,30 +55,22 @@ try_add_ns_to_total_and_update_minmax_(
 
     histogram->event_time_total += time_in_ns;
 
-    if (histogram->has_min_event_time)
+    if (histogram->event_count == 0)
+    {
+        histogram->min_event_time = time_in_ns;
+        histogram->max_event_time = time_in_ns;
+    }
+    else
     {
         if (time_in_ns < histogram->min_event_time)
         {
             histogram->min_event_time = time_in_ns;
         }
-    }
-    else
-    {
-        histogram->has_min_event_time = (uint8_t)P99_TRUE;
-        histogram->min_event_time     = time_in_ns;
-    }
 
-    if (histogram->has_max_event_time)
-    {
         if (time_in_ns > histogram->max_event_time)
         {
             histogram->max_event_time = time_in_ns;
         }
-    }
-    else
-    {
-        histogram->has_max_event_time = (uint8_t)P99_TRUE;
-        histogram->max_event_time     = time_in_ns;
     }
 
     return P99_TRUE;
@@ -157,13 +149,12 @@ value_at_target_rank(
                     }
                 }
 
-                if (histogram->has_min_event_time &&
-                    interpolated < histogram->min_event_time)
+                if (interpolated < histogram->min_event_time)
                 {
                     interpolated = histogram->min_event_time;
                 }
-                if (histogram->has_max_event_time &&
-                    interpolated > histogram->max_event_time)
+
+                if (interpolated > histogram->max_event_time)
                 {
                     interpolated = histogram->max_event_time;
                 }
@@ -175,14 +166,9 @@ value_at_target_rank(
         }
     }
 
-    if (histogram->has_max_event_time)
-    {
-        *value = histogram->max_event_time;
+    *value = histogram->max_event_time;
 
-        return P99_TRUE;
-    }
-
-    return P99_FALSE;
+    return P99_TRUE;
 }
 
 static double
@@ -349,7 +335,7 @@ p99_histogram_min_event_time(
 ,   uint64_t* min
 )
 {
-    if (!histogram->has_min_event_time)
+    if (histogram->event_count == 0)
     {
         return P99_FALSE;
     }
@@ -365,7 +351,7 @@ p99_histogram_max_event_time(
 ,   uint64_t* max
 )
 {
-    if (!histogram->has_max_event_time)
+    if (histogram->event_count == 0)
     {
         return P99_FALSE;
     }
@@ -480,13 +466,12 @@ p99_histogram_value_at_percentile(
                 interpolated = (double)lower + (range_width * fraction);
                 result       = (uint64_t)llround(interpolated);
 
-                if (histogram->has_min_event_time &&
-                    result < histogram->min_event_time)
+                if (result < histogram->min_event_time)
                 {
                     result = histogram->min_event_time;
                 }
-                if (histogram->has_max_event_time &&
-                    result > histogram->max_event_time)
+
+                if (result > histogram->max_event_time)
                 {
                     result = histogram->max_event_time;
                 }
