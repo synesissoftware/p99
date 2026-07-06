@@ -314,7 +314,7 @@ TEST(histogram_BUCKET_PLACEMENT)
     ASSERT_EQ_U64(1, value);
 
     p99_histogram_init(&h);
-    ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, 1ULL << 63));
+    ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, 1ull << 63));
     ASSERT_TRUE(p99_histogram_bucket_value(&h, 63, &value));
     ASSERT_EQ_U64(1, value);
 
@@ -347,9 +347,9 @@ TEST(histogram_push_events)
     ASSERT_TRUE(p99_histogram_min_event_time(&h, &min));
     ASSERT_EQ_U64(1, min);
     ASSERT_TRUE(p99_histogram_max_event_time(&h, &max));
-    ASSERT_EQ_U64(2000000000ULL, max);
+    ASSERT_EQ_U64(2000000000ull, max);
     ASSERT_TRUE(p99_histogram_event_time_total(&h, &total));
-    ASSERT_EQ_U64(2005010104ULL, total);
+    ASSERT_EQ_U64(2005010104ull, total);
 
     ASSERT_EQ_U64(1, p99_histogram_buckets(&h)[0]);
     ASSERT_EQ_U64(1, p99_histogram_buckets(&h)[1]);
@@ -477,7 +477,7 @@ TEST(histogram_PERCENTILES_WIDE_RANGE)
         10000000,
         100000000,
         1000000000,
-        10000000000ULL,
+        10000000000ull,
     };
 
     p99_histogram_init(&h);
@@ -492,7 +492,7 @@ TEST(histogram_PERCENTILES_WIDE_RANGE)
     ASSERT_TRUE(p99_histogram_min_event_time(&h, &min));
     ASSERT_EQ_U64(1, min);
     ASSERT_TRUE(p99_histogram_max_event_time(&h, &max));
-    ASSERT_EQ_U64(10000000000ULL, max);
+    ASSERT_EQ_U64(10000000000ull, max);
 
     ASSERT_TRUE(p99_histogram_value_at_p50(&h, &p50));
     ASSERT_TRUE(p99_histogram_value_at_p75(&h, &p75));
@@ -516,7 +516,7 @@ TEST(histogram_PERCENTILES_WIDE_RANGE)
     ASSERT_TRUE(p99_999 <= p99_999_9);
 
     ASSERT_TRUE(p50 >= 1);
-    ASSERT_TRUE(p99_999_9 <= 10000000000ULL);
+    ASSERT_TRUE(p99_999_9 <= 10000000000ull);
 }
 
 TEST(histogram_PERCENTILES_MANY_EVENTS)
@@ -650,7 +650,7 @@ TEST(histogram_COMPARE_FLOAT_AND_INT_PERCENTILES)
     ASSERT_EQ_APPROX_U64(float_p99_999_9, int_p99_999_9, 0.01);
 }
 
-TEST(histogram_values_at_percentiles_empty)
+TEST(histogram_VALUES_AT_PERCENTILES_EMPTY)
 {
     p99_histogram_t      h;
     p99_pr_fp_result_t   elements[2];
@@ -660,28 +660,28 @@ TEST(histogram_values_at_percentiles_empty)
     p99_histogram_init(&h);
 
     elements[0].level = 50.0;
-    elements[0].value = 0xDEADBEEFDEADBEEFULL;
+    elements[0].value = 0xDEADBEEFDEADBEEFull;
     elements[1].level = 99.0;
-    elements[1].value = 0xCAFEBABECAFEBABEULL;
+    elements[1].value = 0xCAFEBABECAFEBABEull;
 
     for (i = 0; i < sizeof(fixed.values) / sizeof(fixed.values[0]); ++i)
     {
-        fixed.values[i] = 0xDEADBEEFDEADBEEFULL;
+        fixed.values[i] = 0xDEADBEEFDEADBEEFull;
     }
 
     ASSERT_FALSE(p99_histogram_values_at_percentiles(&h, 2, elements));
-    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFULL, elements[0].value);
-    ASSERT_EQ_U64(0xCAFEBABECAFEBABEULL, elements[1].value);
+    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFull, elements[0].value);
+    ASSERT_EQ_U64(0xCAFEBABECAFEBABEull, elements[1].value);
 
     ASSERT_FALSE(p99_histogram_values_at_fixed_percentiles(&h, &fixed));
 
     for (i = 0; i < sizeof(fixed.values) / sizeof(fixed.values[0]); ++i)
     {
-        ASSERT_EQ_U64(0xDEADBEEFDEADBEEFULL, fixed.values[i]);
+        ASSERT_EQ_U64(0xDEADBEEFDEADBEEFull, fixed.values[i]);
     }
 }
 
-TEST(histogram_values_at_percentiles_zero_length)
+TEST(histogram_VALUES_AT_PERCENTILES_ZERO_LENGTH)
 {
     p99_histogram_t    h;
     p99_pr_fp_result_t elements[1];
@@ -690,13 +690,13 @@ TEST(histogram_values_at_percentiles_zero_length)
     ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, 100));
 
     elements[0].level = 50.0;
-    elements[0].value = 0xDEADBEEFDEADBEEFULL;
+    elements[0].value = 0xDEADBEEFDEADBEEFull;
 
     ASSERT_TRUE(p99_histogram_values_at_percentiles(&h, 0, elements));
-    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFULL, elements[0].value);
+    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFull, elements[0].value);
 }
 
-TEST(histogram_values_at_percentiles_batch)
+TEST(histogram_VALUES_AT_PERCENTILES_BATCH)
 {
     p99_histogram_t    h;
     p99_pr_fp_result_t elements[10];
@@ -746,7 +746,45 @@ TEST(histogram_values_at_percentiles_batch)
     }
 }
 
-TEST(histogram_values_at_fixed_percentiles_batch)
+
+TEST(histogram_VALUES_AT_PERCENTILES_NON_MONOTONIC)
+{
+    p99_histogram_t    h;
+    p99_pr_fp_result_t elements[3];
+    uint64_t           p99_value;
+    uint64_t           p75_value;
+    size_t             i;
+
+    p99_histogram_init(&h);
+
+    for (i = 1; i <= 100000; ++i)
+    {
+        ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, (uint64_t)i));
+    }
+
+    ASSERT_TRUE(p99_histogram_value_at_percentile(&h, 99.0, &p99_value));
+    ASSERT_TRUE(p99_histogram_value_at_percentile(&h, 75.0, &p75_value));
+
+    elements[0].level = 99.0;
+    elements[0].value = 0;
+    elements[1].level = 50.0;
+    elements[1].value = 0;
+    elements[2].level = 99.0;
+    elements[2].value = 0;
+
+    ASSERT_TRUE(p99_histogram_values_at_percentiles(
+        &h
+    ,   sizeof(elements) / sizeof(elements[0])
+    ,   elements
+    ));
+
+    ASSERT_EQ_U64(p99_value, elements[0].value);
+    ASSERT_EQ_U64(p99_value, elements[1].value);
+    ASSERT_EQ_U64(p99_value, elements[2].value);
+    ASSERT_TRUE(elements[1].value != p75_value);
+}
+
+TEST(histogram_VALUES_AT_FIXED_PERCENTILES_BATCH)
 {
     p99_histogram_t          h;
     p99_pr_fixed_results_t   batch;
@@ -837,10 +875,11 @@ main(void)
     RUN_TEST_histogram_PERCENTILES_WIDE_RANGE();
     RUN_TEST_histogram_PERCENTILES_MANY_EVENTS();
     RUN_TEST_histogram_COMPARE_FLOAT_AND_INT_PERCENTILES();
-    RUN_TEST_histogram_values_at_percentiles_empty();
-    RUN_TEST_histogram_values_at_percentiles_zero_length();
-    RUN_TEST_histogram_values_at_percentiles_batch();
-    RUN_TEST_histogram_values_at_fixed_percentiles_batch();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_EMPTY();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_ZERO_LENGTH();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_BATCH();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_NON_MONOTONIC();
+    RUN_TEST_histogram_VALUES_AT_FIXED_PERCENTILES_BATCH();
 
     printf("\n%d tests run", g_tests_run);
 

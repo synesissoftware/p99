@@ -77,7 +77,6 @@ extern "C"
 {
 #endif
 
-
 /* --- Symbol visibility ------------------------------------------------ */
 
 #if 0
@@ -99,6 +98,7 @@ extern "C"
 
 /* --- API -------------------------------------------------------------- */
 
+/* --- API -- types ----------------------------------------------------- */
 
 /**
  * @brief Truthy type for p99 predicates and status returns (`int`).
@@ -158,7 +158,33 @@ typedef struct p99_histogram {
     p99_bucket_count_t  buckets[P99_BUCKET_COUNT];  /**< The bucket counts (power-of-two ranges). */
 } p99_histogram_t;
 
-/* --- Lifecycle -------------------------------------------------------- */
+/**
+ * @brief One floating-point percentile result (level and value).
+ *
+ * @see p99_histogram_values_at_percentiles;
+ */
+typedef struct p99_pr_fp_result {
+    double   level; /**< Percentile level; ascending order is recommended. */
+    uint64_t value; /**< Approximated duration in nanoseconds on success. */
+} p99_pr_fp_result_t;
+
+/**
+ * @brief Fixed-set percentile results (p50 through p99.9999).
+ *
+ * @c values[0] is p50; @c values[1] is p75; @c values[2] is p90;
+ * @c values[3] is p95; @c values[4] is p99; @c values[5] is p99.5;
+ * @c values[6] is p99.9; @c values[7] is p99.99; @c values[8] is p99.999;
+ * @c values[9] is p99.9999. 80 bytes (`10 × sizeof(uint64_t)`).
+ *
+ * @see p99_histogram_values_at_fixed_percentiles;
+ */
+typedef struct p99_pr_fixed_results {
+    uint64_t values[10];
+} p99_pr_fixed_results_t;
+
+/* --- API -- functions ------------------------------------------------- */
+
+/* --- API -- functions -- lifecycle ------------------------------------ */
 
 /**
  * Initialise @p histogram to the equivalent of a newly constructed
@@ -175,7 +201,7 @@ p99_histogram_init(p99_histogram_t* histogram);
 P99_CALL(void)
 p99_histogram_clear(p99_histogram_t* histogram);
 
-/* --- Recording -------------------------------------------------------- */
+/* --- API -- functions -- recording ------------------------------------ */
 
 /**
  * @brief Record an event duration in nanoseconds.
@@ -225,7 +251,7 @@ p99_histogram_push_event_time_s(
 ,   uint64_t time_in_s
 );
 
-/* --- Statistics ------------------------------------------------------- */
+/* --- API -- functions -- statistics ----------------------------------- */
 
 /** Return the number of events recorded (`uint64_t`). */
 P99_CALL(uint64_t)
@@ -315,7 +341,7 @@ p99_histogram_bucket_value(
 P99_CALL(p99_bucket_count_t const*)
 p99_histogram_buckets(p99_histogram_t const* histogram);
 
-/* --- Percentiles ------------------------------------------------------ */
+/* --- API -- functions -- percentiles ---------------------------------- */
 
 /**
  * @brief Return the approximated duration at the given percentile.
@@ -323,7 +349,8 @@ p99_histogram_buckets(p99_histogram_t const* histogram);
  * @p percentile is clamped to `[0.0, 100.0]`.
  *
  * @param[in] histogram The histogram to query;
- * @param[in] percentile The percentile to return the approximated duration for;
+ * @param[in] percentile The percentile for which to return the approximated
+ *   duration;
  * @param[out] value Receives the approximated duration in nanoseconds;
  *
  * @return @ref P99_TRUE if the histogram contains one or more events;
@@ -407,29 +434,13 @@ p99_histogram_value_at_p99_999_9(
 );
 
 /**
- * @brief One floating-point percentile result (level and value).
- */
-typedef struct p99_pr_fp_result {
-    double   level; /**< Percentile level; elements must be sorted ascending. */
-    uint64_t value; /**< Approximated duration in nanoseconds on success. */
-} p99_pr_fp_result_t;
-
-/**
- * @brief Fixed-set percentile results (p50 through p99.9999).
+ * @brief Return approximated durations at multiple floating-point
+ *   percentiles in a single pass through the histogram buckets.
  *
- * @c values[0] is p50; @c values[1] is p75; @c values[2] is p90;
- * @c values[3] is p95; @c values[4] is p99; @c values[5] is p99.5;
- * @c values[6] is p99.9; @c values[7] is p99.99; @c values[8] is p99.999;
- * @c values[9] is p99.9999. 80 bytes (`10 × sizeof(uint64_t)`).
- */
-typedef struct p99_pr_fixed_results {
-    uint64_t values[10];
-} p99_pr_fixed_results_t;
-
-/**
- * @brief Return approximated durations at multiple floating-point percentiles.
- *
- * @p elements must be sorted in ascending order of @c level. Each
+ * Percentiles are resolved in array order during a single cumulative walk
+ * through the histogram buckets. @p elements should be sorted in ascending
+ * order of @c level; if a later @c level maps to a target rank not greater
+ * than that of an earlier element, the earlier result is copied. Each
  * @c value is written on success. @p percentile levels are clamped to
  * `[0.0, 100.0]` as for @ref p99_histogram_value_at_percentile.
  *
