@@ -165,6 +165,9 @@ endfunction()
 function(p99_configure_cxx_consumer target)
     p99_link_consumer(${target})
     target_compile_options(${target} PRIVATE ${P99_CXX_COMPILE_OPTIONS})
+    if(MSVC AND MSVC_VERSION VERSION_GREATER_EQUAL 1914)
+        target_compile_options(${target} PRIVATE /Zc:__cplusplus)
+    endif()
     set_target_properties(${target} PROPERTIES
         CXX_STANDARD 20
         CXX_STANDARD_REQUIRED ON
