@@ -45,7 +45,8 @@
 
 * [x] Release benchmark smoke-run (no timing assertions);
 * [x] Doxygen build on Linux Release;
-* [ ] AddressSanitizer / UndefinedBehaviourSanitizer leg on Linux;
+* [x] AddressSanitizer / UndefinedBehaviourSanitizer leg on Linux (Debug;
+  `ctest` only; no benchmark smoke-run);
 * [ ] Optional Debug benchmark smoke-run (currently Release only, for CI
   time);
 * [x] Explicit Windows MinGW and MSVC matrix targets;

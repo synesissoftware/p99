@@ -17,7 +17,7 @@
 * C unit tests (CTest), C example (`build_histogram`), and hand-rolled benchmarks (`p99_benchmark`);
 * Doxygen API documentation (`P99_BUILD_DOCS`, `p99_docs` target);
 * Synesis-standard CMake helper scripts (`prepare_cmake.sh`, `build_cmake.sh`, `clean_cmake.sh`, `remove_cmake_artefacts.sh`, `ctest_cmake.sh`, `run_all_examples.sh`, `run_all_benchmarks.sh`);
-* continuous integration — Ubuntu (default and compact), macOS, Windows MinGW and MSVC; unit tests; Release benchmark smoke-run; Doxygen on Linux Release;
+* continuous integration — Ubuntu (default and compact), macOS, Windows MinGW and MSVC; unit tests; Release benchmark smoke-run; Doxygen on Linux Release; AddressSanitizer and UndefinedBehaviourSanitizer on Linux Debug;
 
 
 <!-- ########################### end of file ########################### -->
