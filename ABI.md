@@ -83,7 +83,7 @@ Source definition (**include/p99/p99.h**):
 ```c
 typedef struct p99_histogram {
     uint8_t             has_overflowed;
-    size_t              event_count;
+    uint64_t            event_count;
     uint64_t            event_time_total;
     uint64_t            min_event_time;
     uint64_t            max_event_time;
@@ -99,7 +99,7 @@ typedef struct p99_histogram {
 |----------------|--------------|-------|------|
 | 0 | 1 | `has_overflowed` | `uint8_t` |
 | 1–7 | 7 | *(padding)* | — |
-| 8 | 8 | `event_count` | `size_t` |
+| 8 | 8 | `event_count` | `uint64_t` |
 | 16 | 8 | `event_time_total` | `uint64_t` |
 | 24 | 8 | `min_event_time` | `uint64_t` |
 | 32 | 8 | `max_event_time` | `uint64_t` |
@@ -126,7 +126,7 @@ memory) can size storage correctly.
 | Field | Semantics |
 |-------|-----------|
 | `has_overflowed` | Non-zero after an arithmetic overflow (running total, or per-bucket limit in compact mode). Further `push` calls return `P99_FALSE`. |
-| `event_count` | Number of successfully recorded events. Min/max queries succeed when `event_count > 0`. |
+| `event_count` | Number of successfully recorded events (`uint64_t`). Min/max queries succeed when `event_count > 0`. Incrementing past `UINT64_MAX` is **undefined behaviour** (not detected; does not set `has_overflowed`). |
 | `event_time_total` | Sum of recorded durations (nanoseconds) while not overflowed. |
 | `min_event_time` | Minimum observed duration (ns); valid when `event_count > 0`. |
 | `max_event_time` | Maximum observed duration (ns); valid when `event_count > 0`. |
@@ -134,9 +134,6 @@ memory) can size storage correctly.
 
 Initialisation: `p99_histogram_init` / `p99_histogram_clear` zero the
 entire struct (`memset`).
-
-**Known limitation (0.x):** `event_count` uses `size_t` increment without an
-explicit overflow check; see **TODO.md** for planned policy.
 
 
 ## Public C API surface

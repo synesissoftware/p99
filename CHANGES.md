@@ -9,7 +9,7 @@
 * 64-bucket logarithmic histogram with nanosecond precision;
 * percentile queries (p50, p75, p90, p95, p99, p99.5, p99.9, p99.99, p99.999, p99.9999, and arbitrary floating-point percentiles);
 * optional compact layout (`P99_COMPACT_HISTOGRAM`: 296 bytes vs 552 bytes on 64-bit; `uint32_t` bucket counts);
-* public API uses `p99_truthy_t` (`int`); struct holds `has_overflowed` only (min/max validity follows `event_count`);
+* public API uses `p99_truthy_t` (`int`); `event_count` is `uint64_t` (overflow past `UINT64_MAX` is undefined behaviour); struct holds `has_overflowed` only (min/max validity follows `event_count`);
 * portable 64/128-bit arithmetic and bit-scan helpers (`p99_portable.h`);
 * CMake build with static and shared library targets; `MSVC_USE_MT` for `/MT`;
 * Windows DLL (`p99.def`, `DllGetVersion`, version resource);

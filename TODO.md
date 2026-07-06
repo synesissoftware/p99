@@ -65,9 +65,8 @@
   B on 64-bit);
 * [x] Document ABI/layout stability policy for 1.x (public
   `p99_histogram_t` is an ABI contract; see [ABI.md](./ABI.md));
-* [ ] Define and implement `event_count` overflow policy (`size_t`
-  increment is currently unchecked; compact layout checks per-bucket
-  `UINT32_MAX` only);
+* [x] Define `event_count` overflow policy — `uint64_t` field; increment
+  past `UINT64_MAX` is undefined behaviour (documented in **ABI.md**);
 * [x] Keep `P99_VER_*` header macros in sync with CMake `PROJECT_VERSION`
   (CMake parses **include/p99/p99.h**; see Synesis sibling libraries);
 

@@ -6,6 +6,9 @@
  * durations (typically in nanoseconds) and querying high-resolution
  * percentiles (p50, p90, p99, etc.).
  *
+ * @note Incrementing @c event_count past @c UINT64_MAX is undefined
+ *   behaviour.
+ *
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
@@ -148,7 +151,7 @@ typedef uint64_t                                            p99_bucket_count_t;
  */
 typedef struct p99_histogram {
     uint8_t             has_overflowed;             /**< Indicates whether an arithmetic overflow has occurred. */
-    size_t              event_count;                /**< The number of events recorded. */
+    uint64_t            event_count;                /**< Event count (`uint64_t`). Increment past `UINT64_MAX` is undefined behaviour. */
     uint64_t            event_time_total;           /**< The total event time in nanoseconds. */
     uint64_t            min_event_time;             /**< The minimum event time in nanoseconds. */
     uint64_t            max_event_time;             /**< The maximum event time in nanoseconds. */
@@ -224,8 +227,8 @@ p99_histogram_push_event_time_s(
 
 /* --- Statistics ------------------------------------------------------- */
 
-/** Return the number of events recorded. */
-P99_CALL(size_t)
+/** Return the number of events recorded (`uint64_t`). */
+P99_CALL(uint64_t)
 p99_histogram_event_count(p99_histogram_t const* histogram);
 
 /**

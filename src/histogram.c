@@ -300,7 +300,7 @@ p99_histogram_push_event_time_s(
 
 /* --- Statistics ------------------------------------------------------- */
 
-P99_CALL(size_t)
+P99_CALL(uint64_t)
 p99_histogram_event_count(p99_histogram_t const* histogram)
 {
     return histogram->event_count;
@@ -501,7 +501,7 @@ p99_histogram_value_at_p50(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   1
     ,   2
     );
@@ -520,7 +520,7 @@ p99_histogram_value_at_p75(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   3
     ,   4
     );
@@ -539,7 +539,7 @@ p99_histogram_value_at_p90(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   90
     ,   100
     );
@@ -558,7 +558,7 @@ p99_histogram_value_at_p95(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   95
     ,   100
     );
@@ -577,7 +577,7 @@ p99_histogram_value_at_p99(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   99
     ,   100
     );
@@ -596,7 +596,7 @@ p99_histogram_value_at_p99_5(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   995
     ,   1000
     );
@@ -615,7 +615,7 @@ p99_histogram_value_at_p99_9(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   999
     ,   1000
     );
@@ -634,7 +634,7 @@ p99_histogram_value_at_p99_99(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   9999
     ,   10000
     );
@@ -653,7 +653,7 @@ p99_histogram_value_at_p99_999(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   99999
     ,   100000
     );
@@ -672,7 +672,7 @@ p99_histogram_value_at_p99_999_9(
 )
 {
     uint64_t target_rank = p99_u64_mul_div_u64_(
-        (uint64_t)histogram->event_count
+        histogram->event_count
     ,   999999
     ,   1000000
     );

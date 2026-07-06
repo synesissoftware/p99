@@ -308,7 +308,7 @@ the running total would overflow, or unit conversion would overflow.
 
 | Function | Description |
 |----------|-------------|
-| `p99_histogram_event_count` | Number of events recorded |
+| `p99_histogram_event_count` | Number of events recorded (`uint64_t`) |
 | `p99_histogram_event_time_total` | Total duration (ns) if no overflow; `P99_FALSE` otherwise |
 | `p99_histogram_event_time_total_raw` | Total duration (ns) regardless of overflow |
 | `p99_histogram_has_overflowed` | Whether an arithmetic overflow occurred |
@@ -318,6 +318,7 @@ the running total would overflow, or unit conversion would overflow.
 | `p99_histogram_buckets` | Read-only pointer to `P99_BUCKET_COUNT` bucket counts |
 
 Min/max are valid when `event_count > 0` (see [ABI.md](./ABI.md)).
+Incrementing `event_count` past `UINT64_MAX` is undefined behaviour.
 
 #### Percentiles
 
@@ -360,7 +361,8 @@ int main(void)
     p99_histogram_push_event_time_us(&histogram, 5);
     p99_histogram_push_event_time_ms(&histogram, 10);
 
-    printf("events: %zu\n", p99_histogram_event_count(&histogram));
+    printf("events: %llu\n",
+           (unsigned long long)p99_histogram_event_count(&histogram));
 
     if (p99_histogram_value_at_p99(&histogram, &value)) {
         printf("p99: %llu ns\n", (unsigned long long)value);

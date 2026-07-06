@@ -141,11 +141,11 @@ main(void)
         int const value_width = 10;
 
         printf("\nHistogram summary:\n");
-        printf("  %-*s %*zu\n",
+        printf("  %-*s %*llu\n",
                label_width,
                "event_count:",
                value_width,
-               p99_histogram_event_count(&histogram));
+               (unsigned long long)p99_histogram_event_count(&histogram));
 
         if (p99_histogram_has_overflowed(&histogram))
         {
