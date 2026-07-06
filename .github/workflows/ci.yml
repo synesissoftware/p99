@@ -29,10 +29,16 @@ jobs:
             build_type: Release
           - os: windows-latest
             build_type: Debug
-            generator: Ninja
+            toolchain: mingw
           - os: windows-latest
             build_type: Release
-            generator: Ninja
+            toolchain: mingw
+          - os: windows-latest
+            build_type: Debug
+            toolchain: msvc
+          - os: windows-latest
+            build_type: Release
+            toolchain: msvc
 
     runs-on: ${{ matrix.os }}
 
@@ -42,32 +48,62 @@ jobs:
       - name: Configure
         shell: bash
         run: |
-          generator_args=()
-          if [ -n "${{ matrix.generator }}" ]; then
-            generator_args=(-G "${{ matrix.generator }}")
-          fi
           compact_args=()
           if [ -n "${{ matrix.compact_histogram }}" ]; then
             compact_args=(-DP99_COMPACT_HISTOGRAM="${{ matrix.compact_histogram }}")
           fi
-          cmake -B build "${generator_args[@]}" \
-            -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" \
-            -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
-            "${compact_args[@]}"
+
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            cmake -B build -A x64 \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              "${compact_args[@]}"
+          elif [ "${{ runner.os }}" = "Windows" ] && \
+               [ "${{ matrix.toolchain }}" = "mingw" ]; then
+            cmake -B build -G "MinGW Makefiles" \
+              -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              "${compact_args[@]}"
+          else
+            cmake -B build \
+              -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              "${compact_args[@]}"
+          fi
 
       - name: Build
-        run: cmake --build build --config ${{ matrix.build_type }}
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            cmake --build build --config ${{ matrix.build_type }}
+          else
+            cmake --build build --config ${{ matrix.build_type }}
+          fi
 
       - name: Test
         shell: bash
-        run: ctest --test-dir build --output-on-failure --build-config ${{ matrix.build_type }} --timeout 120
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            ctest --test-dir build --output-on-failure \
+              --build-config ${{ matrix.build_type }} --timeout 120
+          else
+            ctest --test-dir build --output-on-failure \
+              --build-config ${{ matrix.build_type }} --timeout 120
+          fi
 
       - name: Run benchmarks
         if: matrix.build_type == 'Release'
         shell: bash
         run: |
           benchmark=""
-          for candidate in build/p99_benchmark build/p99_benchmark.exe; do
+          for candidate in \
+            build/p99_benchmark \
+            build/p99_benchmark.exe \
+            build/Release/p99_benchmark.exe \
+            build/Debug/p99_benchmark.exe
+          do
             if [ -f "$candidate" ]; then
               benchmark="$candidate"
               break
@@ -76,12 +112,21 @@ jobs:
           if [ -z "$benchmark" ]; then
             echo "p99_benchmark executable not found under build/" >&2
             ls -la build/ >&2 || true
+            ls -la build/Release >&2 || true
             exit 1
           fi
           "$benchmark"
 
       - name: Install
-        run: cmake --install build --prefix "${{ runner.temp }}/install"
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            cmake --install build --config ${{ matrix.build_type }} \
+              --prefix "${{ runner.temp }}/install"
+          else
+            cmake --install build --prefix "${{ runner.temp }}/install"
+          fi
 
       - name: Verify pkg-config file
         if: runner.os != 'Windows'
