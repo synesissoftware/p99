@@ -134,6 +134,28 @@ benchmark_run(
     );
 }
 
+static int
+benchmark_max_name_width(
+    benchmark_def_t const* benchmarks
+,   size_t               count
+)
+{
+    size_t i;
+    int    width = (int)strlen("benchmark");
+
+    for (i = 0; i < count; ++i)
+    {
+        int const len = (int)strlen(benchmarks[i].name);
+
+        if (len > width)
+        {
+            width = len;
+        }
+    }
+
+    return width;
+}
+
 /* --- Histogram builders ----------------------------------------------- */
 
 static void
@@ -322,6 +344,120 @@ BENCHMARK_value_at_p99_99_wide(void)
     benchmark_sink_u64(value);
 }
 
+static void
+BENCHMARK_all_named_percentiles_wide(void)
+{
+    uint64_t value;
+
+    p99_histogram_value_at_p50(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p75(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p90(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p95(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_5(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_9(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_99(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_999(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_p99_999_9(&g_wide_histogram, &value);
+    benchmark_sink_u64(value);
+}
+
+static void
+BENCHMARK_all_floating_percentiles_wide(void)
+{
+    uint64_t value;
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 50.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 75.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 90.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 95.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.0, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.5, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.9, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.99, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.999, &value);
+    benchmark_sink_u64(value);
+
+    p99_histogram_value_at_percentile(&g_wide_histogram, 99.9999, &value);
+    benchmark_sink_u64(value);
+}
+
+static p99_pr_fp_result_t g_fp_percentile_elements[10] = {
+    { 50.0, 0 }
+,   { 75.0, 0 }
+,   { 90.0, 0 }
+,   { 95.0, 0 }
+,   { 99.0, 0 }
+,   { 99.5, 0 }
+,   { 99.9, 0 }
+,   { 99.99, 0 }
+,   { 99.999, 0 }
+,   { 99.9999, 0 }
+};
+
+static p99_pr_fixed_results_t g_fixed_percentile_results;
+
+static void
+BENCHMARK_values_at_fixed_percentiles_wide(void)
+{
+    benchmark_sink_truthy(
+        p99_histogram_values_at_fixed_percentiles(
+            &g_wide_histogram
+        ,   &g_fixed_percentile_results
+        )
+    );
+    benchmark_sink_u64(g_fixed_percentile_results.values[0]);
+    benchmark_sink_u64(g_fixed_percentile_results.values[9]);
+}
+
+static void
+BENCHMARK_values_at_percentiles_wide(void)
+{
+    benchmark_sink_truthy(
+        p99_histogram_values_at_percentiles(
+            &g_wide_histogram
+        ,   sizeof(g_fp_percentile_elements) / sizeof(g_fp_percentile_elements[0])
+        ,   g_fp_percentile_elements
+        )
+    );
+    benchmark_sink_u64(g_fp_percentile_elements[0].value);
+    benchmark_sink_u64(g_fp_percentile_elements[9].value);
+}
+
 /* --- Main ------------------------------------------------------------- */
 
 int
@@ -440,10 +576,38 @@ main(void)
             NULL,
             BENCHMARK_value_at_p99_99_wide,
         },
+        {
+            "all named percentiles (p50..p99.9999) [100k wide-range events]",
+            1000,
+            100000,
+            NULL,
+            BENCHMARK_all_named_percentiles_wide,
+        },
+        {
+            "all floating percentiles (50.0..99.9999) [100k wide-range events]",
+            1000,
+            100000,
+            NULL,
+            BENCHMARK_all_floating_percentiles_wide,
+        },
+        {
+            "`p99_histogram_values_at_fixed_percentiles()` [100k wide-range events]",
+            1000,
+            100000,
+            NULL,
+            BENCHMARK_values_at_fixed_percentiles_wide,
+        },
+        {
+            "`p99_histogram_values_at_percentiles()` [100k wide-range events]",
+            1000,
+            100000,
+            NULL,
+            BENCHMARK_values_at_percentiles_wide,
+        },
     };
 
     size_t i;
-    int const name_width  = 68;
+    int    name_width;
     int const ns_width    = 10;
     int const iters_width = 10;
 
@@ -452,6 +616,11 @@ main(void)
 
     build_sequential_histogram(&g_seq_histogram);
     build_wide_range_histogram(&g_wide_histogram);
+
+    name_width = benchmark_max_name_width(
+        benchmarks
+    ,   sizeof(benchmarks) / sizeof(benchmarks[0])
+    );
 
     printf(
         "  %-*s %*s  %*s\n"

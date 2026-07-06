@@ -85,21 +85,28 @@ logarithmic buckets.
   bucket counts only) that can reside entirely on the stack or be embedded
   in other structures.
 * **Ultra-Low Latency Insertion**: In the bundled benchmark, each
-  `p99_histogram_push_event_time_ns` iteration re-initialises the
-  histogram first (`init` + `push` per loop). That reports approximately
-  **5 to 6 nanoseconds** by default, or with `P99_COMPACT_HISTOGRAM`
-  (Release build, isolated benchmark, macOS, mains power).
+  `p99_histogram_push_event_time_ns` call runs against a warm histogram
+  (re-initialised once per timed iteration in setup). That reports
+  approximately **7 to 8 nanoseconds** by default, or with
+  `P99_COMPACT_HISTOGRAM` (Release build, isolated benchmark, macOS, mains
+  power).
 * **Fast Reset**: The warm-reset benchmarks (`p99_histogram_init` or
   `p99_histogram_clear` on a histogram that already holds events) report
-  approximately **9 to 10 nanoseconds** in either layout (`memset`-based
+  approximately **13 to 17 nanoseconds** in either layout (`memset`-based
   initialisation). A cold stack `p99_histogram_init` is slightly faster
-  (**~5 ns**) because the slot is often already zero from the prior
+  (**~6 to 7 ns**) because the slot is often already zero from the prior
   iteration.
-* **Blazing-Fast Queries**: Querying percentiles on a 100k-event
+* **Blazing-Fast Queries**: Querying a single percentile on a 100k-event
   histogram (such as `p99_histogram_value_at_p99`) takes approximately
   **9 to 16 nanoseconds** in either layout, depending on event
   distribution across buckets and whether the `double` percentile API or
   a named `p99` wrapper is used.
+* **Batch Percentile Queries**: Retrieving all ten fixed percentiles via
+  `p99_histogram_values_at_fixed_percentiles` on a 100k-event wide-range
+  histogram takes approximately **25 to 35 nanoseconds** (one bucket walk).
+  The floating-point batch API
+  (`p99_histogram_values_at_percentiles`, same ten levels) takes
+  approximately **45 to 50 nanoseconds**.
 * **Instruction-Cache Friendly**: The query methods are designed with a
   "thin caller / heavy worker" pattern to prevent instruction-cache bloat
   and maintain high CPU cache locality under real-world workloads.
@@ -279,6 +286,8 @@ Predicate and status returns use `p99_truthy_t` (`int`): `P99_FALSE` (0) or
 | Symbol | Description |
 |--------|-------------|
 | `p99_histogram_t` | Fixed-size histogram (stack or embed); see [ABI.md](./ABI.md) |
+| `p99_pr_fp_result_t` | One floating-point percentile level and result value |
+| `p99_pr_fixed_results_t` | Ten fixed percentile results (p50 through p99.9999); 80 bytes |
 | `p99_bucket_count_t` | `uint64_t` per bucket (default); `uint32_t` when `P99_COMPACT_HISTOGRAM` is defined |
 | `p99_truthy_t` | `int` used for predicate / status returns |
 | `P99_FALSE`, `P99_TRUE` | `0` and `1` |
@@ -343,6 +352,14 @@ clamps `percentile` to `[0.0, 100.0]`.
 | `p99_histogram_value_at_p99_99` | p99.99 |
 | `p99_histogram_value_at_p99_999` | p99.999 |
 | `p99_histogram_value_at_p99_999_9` | p99.9999 |
+| `p99_histogram_values_at_percentiles` | Multiple percentiles in one bucket walk (`p99_pr_fp_result_t[]`; ascending `level` recommended) |
+| `p99_histogram_values_at_fixed_percentiles` | All ten fixed percentiles in one bucket walk (`p99_pr_fixed_results_t`) |
+
+Batch APIs resolve percentiles in array order during a single cumulative
+scan. For `p99_histogram_values_at_percentiles`, if a later `level` maps
+to a target rank not greater than an earlier element's, the earlier
+result is copied. Levels are clamped to `[0.0, 100.0]` as for the
+single-query API.
 
 Parameter and return details are in [`include/p99/p99.h`](include/p99/p99.h) and
 the [API documentation](#api-documentation) (Doxygen).
@@ -411,7 +428,10 @@ cmake --build build --target p99_benchmark
 
 Timings vary by CPU, power source, and operating system; figures in
 [Performance Claims](#performance-claims) are indicative (macOS, Release,
-isolated benchmark harness, mains power). Reconfigure with
+isolated benchmark harness, mains power). The suite includes single-
+percentile queries, manual ten-call loops, and the batch APIs
+(`p99_histogram_values_at_percentiles`,
+`p99_histogram_values_at_fixed_percentiles`). Reconfigure with
 `-DP99_COMPACT_HISTOGRAM=ON` to benchmark the compact layout (296-byte
 struct; per-bucket counts limited to `UINT32_MAX`).
 
