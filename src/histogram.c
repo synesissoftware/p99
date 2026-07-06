@@ -86,6 +86,83 @@ value_at_target_rank(
     p99_histogram_t const* histogram
 ,   uint64_t target_rank
 ,   uint64_t* value
+);
+
+static void
+value_at_target_rank_in_bucket_(
+    p99_histogram_t const* histogram
+,   size_t                 bucket_index
+,   uint64_t               count
+,   uint64_t               prev_accumulated
+,   uint64_t               target_rank
+,   uint64_t*              value
+)
+{
+    uint64_t lower;
+    uint64_t upper;
+    uint64_t interpolated;
+
+    if (!p99_histogram_bucket_range_(
+            bucket_index
+        ,   &lower
+        ,   &upper
+        ))
+    {
+        lower = 0;
+        upper = UINT64_MAX;
+    }
+
+    if (target_rank <= prev_accumulated)
+    {
+        interpolated = lower;
+    }
+    else
+    {
+        uint64_t target_offset = target_rank - prev_accumulated;
+        uint64_t range_width;
+
+        if ((P99_BUCKET_COUNT - 1) == bucket_index)
+        {
+            range_width = UINT64_MAX - lower;
+        }
+        else
+        {
+            range_width = upper - lower;
+        }
+
+        if (range_width <= UINT64_MAX / target_offset)
+        {
+            interpolated = lower + (range_width * target_offset) / count;
+        }
+        else
+        {
+            interpolated = p99_u64_add_mul_div_u64_(
+                lower
+            ,   range_width
+            ,   target_offset
+            ,   count
+            );
+        }
+    }
+
+    if (interpolated < histogram->min_event_time)
+    {
+        interpolated = histogram->min_event_time;
+    }
+
+    if (interpolated > histogram->max_event_time)
+    {
+        interpolated = histogram->max_event_time;
+    }
+
+    *value = interpolated;
+}
+
+static p99_truthy_t
+value_at_target_rank(
+    p99_histogram_t const* histogram
+,   uint64_t target_rank
+,   uint64_t* value
 )
 {
     uint64_t accumulated = 0;
@@ -103,68 +180,19 @@ value_at_target_rank(
         if (count > 0)
         {
             uint64_t prev_accumulated = accumulated;
-            uint64_t lower;
-            uint64_t upper;
-            uint64_t interpolated;
 
             accumulated += count;
 
             if (accumulated >= target_rank)
             {
-                if (!p99_histogram_bucket_range_(
-                        i
-                    ,   &lower
-                    ,   &upper
-                    ))
-                {
-                    lower = 0;
-                    upper = UINT64_MAX;
-                }
-
-                if (target_rank <= prev_accumulated)
-                {
-                    interpolated = lower;
-                }
-                else
-                {
-                    uint64_t target_offset = target_rank - prev_accumulated;
-                    uint64_t range_width;
-
-                    if ((P99_BUCKET_COUNT - 1) == i)
-                    {
-                        range_width = UINT64_MAX - lower;
-                    }
-                    else
-                    {
-                        range_width = upper - lower;
-                    }
-
-                    if (range_width <= UINT64_MAX / target_offset)
-                    {
-                        interpolated = lower + (range_width * target_offset) / count;
-                    }
-                    else
-                    {
-                        interpolated = p99_u64_add_mul_div_u64_(
-                            lower
-                        ,   range_width
-                        ,   target_offset
-                        ,   count
-                        );
-                    }
-                }
-
-                if (interpolated < histogram->min_event_time)
-                {
-                    interpolated = histogram->min_event_time;
-                }
-
-                if (interpolated > histogram->max_event_time)
-                {
-                    interpolated = histogram->max_event_time;
-                }
-
-                *value = interpolated;
+                value_at_target_rank_in_bucket_(
+                    histogram
+                ,   i
+                ,   count
+                ,   prev_accumulated
+                ,   target_rank
+                ,   value
+                );
 
                 return P99_TRUE;
             }
@@ -682,6 +710,118 @@ p99_histogram_value_at_p99_999_9(
     ,   target_rank
     ,   value
     );
+}
+
+P99_CALL(p99_truthy_t)
+p99_histogram_values_at_percentiles(
+    p99_histogram_t const* histogram
+,   size_t length
+,   p99_pr_fp_result_t* elements
+)
+{
+    size_t i;
+
+    if (0 == histogram->event_count)
+    {
+        return P99_FALSE;
+    }
+
+    for (i = 0; i < length; ++i)
+    {
+        if (!p99_histogram_value_at_percentile(
+                histogram
+            ,   elements[i].level
+            ,   &elements[i].value
+            ))
+        {
+            return P99_FALSE;
+        }
+    }
+
+    return P99_TRUE;
+}
+
+P99_CALL(p99_truthy_t)
+p99_histogram_values_at_fixed_percentiles(
+    p99_histogram_t const* histogram
+,   p99_pr_fixed_results_t* results
+)
+{
+    static uint64_t const numerators[10] = {
+        1
+    ,   3
+    ,   90
+    ,   95
+    ,   99
+    ,   995
+    ,   999
+    ,   9999
+    ,   99999
+    ,   999999
+    };
+
+    static uint64_t const denominators[10] = {
+        2
+    ,   4
+    ,   100
+    ,   100
+    ,   100
+    ,   1000
+    ,   1000
+    ,   10000
+    ,   100000
+    ,   1000000
+    };
+
+    uint64_t target_ranks[10];
+    uint64_t accumulated = 0;
+    size_t   next_rank   = 0;
+
+
+    if (0 == histogram->event_count)
+    {
+        return P99_FALSE;
+    }
+
+    { size_t i; for (i = 0; 10 != i; ++i)
+    {
+        target_ranks[i] = p99_u64_mul_div_u64_(
+            histogram->event_count
+        ,   numerators[i]
+        ,   denominators[i]
+        );
+    }}
+
+    { size_t i; for (i = 0; i < P99_BUCKET_COUNT && 10 != next_rank; ++i)
+    {
+        uint64_t count = p99_hist_bucket_at_(histogram, i);
+
+        if (count > 0)
+        {
+            uint64_t prev_accumulated = accumulated;
+
+            accumulated += count;
+
+            for (; 10 != next_rank && accumulated >= target_ranks[next_rank]; ++next_rank)
+            {
+                value_at_target_rank_in_bucket_(
+                    histogram
+                ,   i
+                ,   count
+                ,   prev_accumulated
+                ,   target_ranks[next_rank]
+                ,   &results->values[next_rank]
+                );
+            }
+        }
+    }}
+
+    for (; 10 != next_rank; ++next_rank)
+    {
+        results->values[next_rank] = histogram->max_event_time;
+    }
+
+    return P99_TRUE;
 }
 
 /* --- Utilities -------------------------------------------------------- */

@@ -49,8 +49,8 @@
  */
 
 #define P99_VER_MAJOR                                       0
-#define P99_VER_MINOR                                       1
-#define P99_VER_PATCH                                       1
+#define P99_VER_MINOR                                       2
+#define P99_VER_PATCH                                       0
 #define P99_VER_ALPHABETA                                   0x41
 
 #define P99_VER \
@@ -404,6 +404,65 @@ P99_CALL(p99_truthy_t)
 p99_histogram_value_at_p99_999_9(
     p99_histogram_t const* histogram
 ,   uint64_t* value
+);
+
+/**
+ * @brief One floating-point percentile result (level and value).
+ */
+typedef struct p99_pr_fp_result {
+    double   level; /**< Percentile level; elements must be sorted ascending. */
+    uint64_t value; /**< Approximated duration in nanoseconds on success. */
+} p99_pr_fp_result_t;
+
+/**
+ * @brief Fixed-set percentile results (p50 through p99.9999).
+ *
+ * @c values[0] is p50; @c values[1] is p75; @c values[2] is p90;
+ * @c values[3] is p95; @c values[4] is p99; @c values[5] is p99.5;
+ * @c values[6] is p99.9; @c values[7] is p99.99; @c values[8] is p99.999;
+ * @c values[9] is p99.9999. 80 bytes (`10 × sizeof(uint64_t)`).
+ */
+typedef struct p99_pr_fixed_results {
+    uint64_t values[10];
+} p99_pr_fixed_results_t;
+
+/**
+ * @brief Return approximated durations at multiple floating-point percentiles.
+ *
+ * @p elements must be sorted in ascending order of @c level. Each
+ * @c value is written on success. @p percentile levels are clamped to
+ * `[0.0, 100.0]` as for @ref p99_histogram_value_at_percentile.
+ *
+ * @param[in] histogram The histogram to query;
+ * @param[in] length Number of elements in @p elements;
+ * @param[in,out] elements Percentile levels and result values;
+ *
+ * @return @ref P99_FALSE if the histogram is empty ( @p elements is left
+ *   untouched); @ref P99_TRUE if @p length is zero or all percentiles were
+ *   computed.
+ */
+P99_CALL(p99_truthy_t)
+p99_histogram_values_at_percentiles(
+    p99_histogram_t const* histogram
+,   size_t length
+,   p99_pr_fp_result_t* elements
+);
+
+/**
+ * @brief Return approximated durations at the fixed percentile set.
+ *
+ * Fills @p results in the order documented for @ref p99_pr_fixed_results_t.
+ *
+ * @param[in] histogram The histogram to query;
+ * @param[out] results Receives the ten fixed percentile values;
+ *
+ * @return @ref P99_FALSE if the histogram is empty ( @p results is left
+ *   untouched); @ref P99_TRUE otherwise.
+ */
+P99_CALL(p99_truthy_t)
+p99_histogram_values_at_fixed_percentiles(
+    p99_histogram_t const* histogram
+,   p99_pr_fixed_results_t* results
 );
 
 #ifdef __cplusplus

@@ -209,11 +209,11 @@ assert_scalar_eq_approx_u64(
 TEST(VERSION)
 {
     ASSERT_EQ_SIZE(0, P99_VER_MAJOR);
-    ASSERT_EQ_SIZE(1, P99_VER_MINOR);
-    ASSERT_EQ_SIZE(1, P99_VER_PATCH);
-    ASSERT_EQ_SIZE(1, P99_VER_REVISION);
+    ASSERT_EQ_SIZE(2, P99_VER_MINOR);
+    ASSERT_EQ_SIZE(0, P99_VER_PATCH);
+    ASSERT_EQ_SIZE(P99_VER_PATCH, P99_VER_REVISION);
     ASSERT_EQ_SIZE(0x41, P99_VER_ALPHABETA);
-    ASSERT_EQ_SIZE(0x00010141, P99_VER);
+    ASSERT_EQ_SIZE(0x00020041, P99_VER);
 }
 
 TEST(histogram_STRUCT_SIZE)
@@ -650,6 +650,174 @@ TEST(histogram_COMPARE_FLOAT_AND_INT_PERCENTILES)
     ASSERT_EQ_APPROX_U64(float_p99_999_9, int_p99_999_9, 0.01);
 }
 
+TEST(histogram_values_at_percentiles_empty)
+{
+    p99_histogram_t      h;
+    p99_pr_fp_result_t   elements[2];
+    p99_pr_fixed_results_t fixed;
+    size_t               i;
+
+    p99_histogram_init(&h);
+
+    elements[0].level = 50.0;
+    elements[0].value = 0xDEADBEEFDEADBEEFULL;
+    elements[1].level = 99.0;
+    elements[1].value = 0xCAFEBABECAFEBABEULL;
+
+    for (i = 0; i < sizeof(fixed.values) / sizeof(fixed.values[0]); ++i)
+    {
+        fixed.values[i] = 0xDEADBEEFDEADBEEFULL;
+    }
+
+    ASSERT_FALSE(p99_histogram_values_at_percentiles(&h, 2, elements));
+    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFULL, elements[0].value);
+    ASSERT_EQ_U64(0xCAFEBABECAFEBABEULL, elements[1].value);
+
+    ASSERT_FALSE(p99_histogram_values_at_fixed_percentiles(&h, &fixed));
+
+    for (i = 0; i < sizeof(fixed.values) / sizeof(fixed.values[0]); ++i)
+    {
+        ASSERT_EQ_U64(0xDEADBEEFDEADBEEFULL, fixed.values[i]);
+    }
+}
+
+TEST(histogram_values_at_percentiles_zero_length)
+{
+    p99_histogram_t    h;
+    p99_pr_fp_result_t elements[1];
+
+    p99_histogram_init(&h);
+    ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, 100));
+
+    elements[0].level = 50.0;
+    elements[0].value = 0xDEADBEEFDEADBEEFULL;
+
+    ASSERT_TRUE(p99_histogram_values_at_percentiles(&h, 0, elements));
+    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFULL, elements[0].value);
+}
+
+TEST(histogram_values_at_percentiles_batch)
+{
+    p99_histogram_t    h;
+    p99_pr_fp_result_t elements[10];
+    uint64_t           expected;
+    size_t             i;
+
+    static double const levels[] = {
+        50.0
+    ,   75.0
+    ,   90.0
+    ,   95.0
+    ,   99.0
+    ,   99.5
+    ,   99.9
+    ,   99.99
+    ,   99.999
+    ,   99.9999
+    };
+
+    p99_histogram_init(&h);
+
+    for (i = 1; i <= 100000; ++i)
+    {
+        ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, (uint64_t)i));
+    }
+
+    for (i = 0; i < sizeof(levels) / sizeof(levels[0]); ++i)
+    {
+        elements[i].level = levels[i];
+        elements[i].value = 0;
+    }
+
+    ASSERT_TRUE(p99_histogram_values_at_percentiles(
+        &h
+    ,   sizeof(levels) / sizeof(levels[0])
+    ,   elements
+    ));
+
+    for (i = 0; i < sizeof(levels) / sizeof(levels[0]); ++i)
+    {
+        ASSERT_TRUE(p99_histogram_value_at_percentile(
+            &h
+        ,   levels[i]
+        ,   &expected
+        ));
+        ASSERT_EQ_U64(expected, elements[i].value);
+    }
+}
+
+TEST(histogram_values_at_fixed_percentiles_batch)
+{
+    p99_histogram_t          h;
+    p99_pr_fixed_results_t   batch;
+    uint64_t                 p50;
+    uint64_t                 p75;
+    uint64_t                 p90;
+    uint64_t                 p95;
+    uint64_t                 p99;
+    uint64_t                 p99_5;
+    uint64_t                 p99_9;
+    uint64_t                 p99_99;
+    uint64_t                 p99_999;
+    uint64_t                 p99_999_9;
+    size_t                   i;
+
+    static uint64_t const values[] = {
+        1
+    ,   10
+    ,   100
+    ,   1000
+    ,   10000
+    ,   100000
+    ,   1000000
+    ,   10000000
+    ,   100000000
+    ,   1000000000
+    ,   10000000000ULL
+    };
+
+    p99_histogram_init(&h);
+
+    for (i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
+    {
+        ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, values[i]));
+    }
+
+    ASSERT_TRUE(p99_histogram_values_at_fixed_percentiles(&h, &batch));
+
+    ASSERT_TRUE(p99_histogram_value_at_p50(&h, &p50));
+    ASSERT_TRUE(p99_histogram_value_at_p75(&h, &p75));
+    ASSERT_TRUE(p99_histogram_value_at_p90(&h, &p90));
+    ASSERT_TRUE(p99_histogram_value_at_p95(&h, &p95));
+    ASSERT_TRUE(p99_histogram_value_at_p99(&h, &p99));
+    ASSERT_TRUE(p99_histogram_value_at_p99_5(&h, &p99_5));
+    ASSERT_TRUE(p99_histogram_value_at_p99_9(&h, &p99_9));
+    ASSERT_TRUE(p99_histogram_value_at_p99_99(&h, &p99_99));
+    ASSERT_TRUE(p99_histogram_value_at_p99_999(&h, &p99_999));
+    ASSERT_TRUE(p99_histogram_value_at_p99_999_9(&h, &p99_999_9));
+
+    ASSERT_EQ_U64(p50, batch.values[0]);
+    ASSERT_EQ_U64(p75, batch.values[1]);
+    ASSERT_EQ_U64(p90, batch.values[2]);
+    ASSERT_EQ_U64(p95, batch.values[3]);
+    ASSERT_EQ_U64(p99, batch.values[4]);
+    ASSERT_EQ_U64(p99_5, batch.values[5]);
+    ASSERT_EQ_U64(p99_9, batch.values[6]);
+    ASSERT_EQ_U64(p99_99, batch.values[7]);
+    ASSERT_EQ_U64(p99_999, batch.values[8]);
+    ASSERT_EQ_U64(p99_999_9, batch.values[9]);
+
+    ASSERT_TRUE(batch.values[0] <= batch.values[1]);
+    ASSERT_TRUE(batch.values[1] <= batch.values[2]);
+    ASSERT_TRUE(batch.values[2] <= batch.values[3]);
+    ASSERT_TRUE(batch.values[3] <= batch.values[4]);
+    ASSERT_TRUE(batch.values[4] <= batch.values[5]);
+    ASSERT_TRUE(batch.values[5] <= batch.values[6]);
+    ASSERT_TRUE(batch.values[6] <= batch.values[7]);
+    ASSERT_TRUE(batch.values[7] <= batch.values[8]);
+    ASSERT_TRUE(batch.values[8] <= batch.values[9]);
+}
+
 /* --- Main ------------------------------------------------------------- */
 
 int
@@ -669,6 +837,10 @@ main(void)
     RUN_TEST_histogram_PERCENTILES_WIDE_RANGE();
     RUN_TEST_histogram_PERCENTILES_MANY_EVENTS();
     RUN_TEST_histogram_COMPARE_FLOAT_AND_INT_PERCENTILES();
+    RUN_TEST_histogram_values_at_percentiles_empty();
+    RUN_TEST_histogram_values_at_percentiles_zero_length();
+    RUN_TEST_histogram_values_at_percentiles_batch();
+    RUN_TEST_histogram_values_at_fixed_percentiles_batch();
 
     printf("\n%d tests run", g_tests_run);
 

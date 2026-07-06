@@ -279,6 +279,8 @@ Predicate and status returns use `p99_truthy_t` (`int`): `P99_FALSE` (0) or
 | Symbol | Description |
 |--------|-------------|
 | `p99_histogram_t` | Fixed-size histogram (stack or embed); see [ABI.md](./ABI.md) |
+| `p99_pr_fp_result_t` | One floating-point percentile level and result value |
+| `p99_pr_fixed_results_t` | Ten fixed percentile results (p50 through p99.9999); 80 bytes |
 | `p99_bucket_count_t` | `uint64_t` per bucket (default); `uint32_t` when `P99_COMPACT_HISTOGRAM` is defined |
 | `p99_truthy_t` | `int` used for predicate / status returns |
 | `P99_FALSE`, `P99_TRUE` | `0` and `1` |
@@ -343,6 +345,8 @@ clamps `percentile` to `[0.0, 100.0]`.
 | `p99_histogram_value_at_p99_99` | p99.99 |
 | `p99_histogram_value_at_p99_999` | p99.999 |
 | `p99_histogram_value_at_p99_999_9` | p99.9999 |
+| `p99_histogram_values_at_percentiles` | Multiple arbitrary percentiles (sorted levels) |
+| `p99_histogram_values_at_fixed_percentiles` | All ten fixed percentiles in one call |
 
 Parameter and return details are in [`include/p99/p99.h`](include/p99/p99.h) and
 the [API documentation](#api-documentation) (Doxygen).
