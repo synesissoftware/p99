@@ -27,16 +27,16 @@ static int g_tests_failed = 0;
 
 #define TEST(fn)                                                            \
                                                                             \
-    static void fn(void);                                                   \
-    static void run_##fn(void)                                              \
+    static void TEST_##fn(void);                                            \
+    static void RUN_TEST_##fn(void)                                         \
     {                                                                       \
         ++g_tests_run;                                                      \
         printf("  %s ... ", #fn);                                           \
         fflush(stdout);                                                     \
-        fn();                                                               \
+        TEST_##fn();                                                        \
         printf("ok\n");                                                     \
     }                                                                       \
-    static void fn(void)
+    static void TEST_##fn(void)
 
 #define ASSERT(expr, file, line, func)                                      \
                                                                             \
@@ -206,7 +206,7 @@ assert_scalar_eq_approx_u64(
 
 /* --- Tests ------------------------------------------------------------ */
 
-TEST(test_version)
+TEST(VERSION)
 {
     ASSERT_EQ_SIZE(0, P99_VER_MAJOR);
     ASSERT_EQ_SIZE(1, P99_VER_MINOR);
@@ -216,7 +216,7 @@ TEST(test_version)
     ASSERT_EQ_SIZE(0x00010141, P99_VER);
 }
 
-TEST(test_histogram_struct_size)
+TEST(histogram_STRUCT_SIZE)
 {
     size_t const header_size  = offsetof(p99_histogram_t, buckets);
     size_t const buckets_size = P99_BUCKET_COUNT * sizeof(p99_bucket_count_t);
@@ -232,7 +232,7 @@ TEST(test_histogram_struct_size)
 #endif
 }
 
-TEST(test_histogram_default)
+TEST(histogram_DEFAULT)
 {
     p99_histogram_t h;
     uint64_t        total;
@@ -258,7 +258,7 @@ TEST(test_histogram_default)
     ASSERT_FALSE(p99_histogram_bucket_value(&h, 64, &bucket));
 }
 
-TEST(test_histogram_bucket_placement)
+TEST(histogram_BUCKET_PLACEMENT)
 {
     p99_histogram_t h;
     uint64_t        value;
@@ -326,7 +326,7 @@ TEST(test_histogram_bucket_placement)
     ASSERT_FALSE(p99_histogram_bucket_value(&h, 64, &value));
 }
 
-TEST(test_histogram_push_events)
+TEST(histogram_push_events)
 {
     p99_histogram_t h;
     uint64_t        min;
@@ -365,7 +365,7 @@ TEST(test_histogram_push_events)
     ASSERT_EQ_U64(0, total);
 }
 
-TEST(test_histogram_overflow)
+TEST(histogram_OVERFLOW)
 {
     p99_histogram_t h;
     uint64_t        total;
@@ -383,7 +383,7 @@ TEST(test_histogram_overflow)
     ASSERT_EQ_U64(UINT64_MAX, p99_histogram_event_time_total_raw(&h));
 }
 
-TEST(test_histogram_percentiles_empty)
+TEST(histogram_PERCENTILES_EMPTY)
 {
     p99_histogram_t h;
     uint64_t        value;
@@ -395,7 +395,7 @@ TEST(test_histogram_percentiles_empty)
     ASSERT_FALSE(p99_histogram_value_at_p99(&h, &value));
 }
 
-TEST(test_histogram_percentiles_single_event)
+TEST(histogram_PERCENTILES_SINGLE_EVENT)
 {
     p99_histogram_t h;
     uint64_t        value;
@@ -422,7 +422,7 @@ TEST(test_histogram_percentiles_single_event)
     ASSERT_EQ_U64(100, value);
 }
 
-TEST(test_histogram_percentiles_interpolation)
+TEST(histogram_PERCENTILES_INTERPOLATION)
 {
     p99_histogram_t h;
     uint64_t        p50;
@@ -450,7 +450,7 @@ TEST(test_histogram_percentiles_interpolation)
     ASSERT_TRUE(value <= 200);
 }
 
-TEST(test_histogram_percentiles_wide_range)
+TEST(histogram_PERCENTILES_WIDE_RANGE)
 {
     p99_histogram_t h;
     uint64_t        min;
@@ -519,7 +519,7 @@ TEST(test_histogram_percentiles_wide_range)
     ASSERT_TRUE(p99_999_9 <= 10000000000ULL);
 }
 
-TEST(test_histogram_percentiles_many_events)
+TEST(histogram_PERCENTILES_MANY_EVENTS)
 {
     p99_histogram_t h;
     const size_t    count = 100000;
@@ -577,7 +577,7 @@ TEST(test_histogram_percentiles_many_events)
     ASSERT_TRUE(p99_999 <= p99_999_9);
 }
 
-TEST(test_histogram_compare_float_and_int_percentiles)
+TEST(histogram_COMPARE_FLOAT_AND_INT_PERCENTILES)
 {
     p99_histogram_t h;
     uint64_t        float_p50;
@@ -657,18 +657,18 @@ main(void)
 {
     printf("p99 histogram tests\n");
 
-    run_test_version();
-    run_test_histogram_struct_size();
-    run_test_histogram_default();
-    run_test_histogram_bucket_placement();
-    run_test_histogram_push_events();
-    run_test_histogram_overflow();
-    run_test_histogram_percentiles_empty();
-    run_test_histogram_percentiles_single_event();
-    run_test_histogram_percentiles_interpolation();
-    run_test_histogram_percentiles_wide_range();
-    run_test_histogram_percentiles_many_events();
-    run_test_histogram_compare_float_and_int_percentiles();
+    RUN_TEST_VERSION();
+    RUN_TEST_histogram_STRUCT_SIZE();
+    RUN_TEST_histogram_DEFAULT();
+    RUN_TEST_histogram_BUCKET_PLACEMENT();
+    RUN_TEST_histogram_push_events();
+    RUN_TEST_histogram_OVERFLOW();
+    RUN_TEST_histogram_PERCENTILES_EMPTY();
+    RUN_TEST_histogram_PERCENTILES_SINGLE_EVENT();
+    RUN_TEST_histogram_PERCENTILES_INTERPOLATION();
+    RUN_TEST_histogram_PERCENTILES_WIDE_RANGE();
+    RUN_TEST_histogram_PERCENTILES_MANY_EVENTS();
+    RUN_TEST_histogram_COMPARE_FLOAT_AND_INT_PERCENTILES();
 
     printf("\n%d tests run", g_tests_run);
 
