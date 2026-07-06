@@ -2,6 +2,11 @@
  * @file benchmark_histogram.c
  * @brief Performance benchmarks for the p99 histogram.
  *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 4th July 2026
+ * Updated: 6th July 2026
+ *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
  * @license BSD-3-Clause
@@ -117,14 +122,16 @@ benchmark_run(
     elapsed_ns = end_ns - start_ns;
     ns_per_op  = (double)elapsed_ns / (double)def->measure_iterations;
 
-    printf("  %-*s %*.*f  %*zu\n",
-           name_width,
-           def->name,
-           ns_width,
-           2,
-           ns_per_op,
-           iters_width,
-           def->measure_iterations);
+    printf(
+        "  %-*s %*.*f  %*zu\n"
+    ,   name_width
+    ,   def->name
+    ,   ns_width
+    ,   2
+    ,   ns_per_op
+    ,   iters_width
+    ,   def->measure_iterations
+    );
 }
 
 /* --- Histogram builders ----------------------------------------------- */
@@ -446,13 +453,15 @@ main(void)
     build_sequential_histogram(&g_seq_histogram);
     build_wide_range_histogram(&g_wide_histogram);
 
-    printf("  %-*s %*s  %*s\n",
-           name_width,
-           "benchmark",
-           ns_width,
-           "ns/op",
-           iters_width,
-           "iters");
+    printf(
+        "  %-*s %*s  %*s\n"
+    ,   name_width
+    ,   "benchmark"
+    ,   ns_width
+    ,   "ns/op"
+    ,   iters_width
+    ,   "iters"
+    );
 
     for (i = 0; i < sizeof(benchmarks) / sizeof(benchmarks[0]); ++i)
     {

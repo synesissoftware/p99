@@ -2,6 +2,11 @@
  * @file dllmain.c
  * @brief Windows DLL entry points for p99.
  *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 4th July 2026
+ * Updated: 6th July 2026
+ *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
  * @license BSD-3-Clause

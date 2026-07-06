@@ -2,6 +2,11 @@
  * @file build_histogram.c
  * @brief Example program showing p99 histogram usage.
  *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 4th July 2026
+ * Updated: 6th July 2026
+ *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
  * @license BSD-3-Clause
@@ -81,10 +86,11 @@ main(void)
         parsed = strtol(env, &end, 10);
         if (end == env || *end != '\0' || parsed <= 0)
         {
-            fprintf(stderr,
-                    "Warning: failed to parse P99_TRIES value '%s', "
-                    "defaulting to 100\n",
-                    env);
+            fprintf(
+                stderr
+            ,   "Warning: failed to parse P99_TRIES value '%s'; defaulting to 100\n"
+            ,   env
+            );
         }
         else
         {
@@ -136,30 +142,36 @@ main(void)
         int const value_width = 10;
 
         printf("\nHistogram summary:\n");
-        printf("  %-*s %*zu\n",
-               label_width,
-               "event_count:",
-               value_width,
-               p99_histogram_event_count(&histogram));
+        printf(
+            "  %-*s %*llu\n"
+        ,   label_width
+        ,   "event_count:"
+        ,   value_width
+        ,   (unsigned long long)p99_histogram_event_count(&histogram)
+        );
 
         if (p99_histogram_has_overflowed(&histogram))
         {
-            printf("  %-*s %*s\n",
-                   label_width,
-                   "event_time_total:",
-                   value_width + 3,
-                   "<overflow>");
+            printf(
+                "  %-*s %*s\n"
+            ,   label_width
+            ,   "event_time_total:"
+            ,   value_width + 3
+            ,   "<overflow>"
+            );
         }
         else
         {
             uint64_t total;
 
             p99_histogram_event_time_total(&histogram, &total);
-            printf("  %-*s %*llu ns\n",
-                   label_width,
-                   "event_time_total:",
-                   value_width,
-                   (unsigned long long)total);
+            printf(
+                "  %-*s %*llu ns\n"
+            ,   label_width
+            ,   "event_time_total:"
+            ,   value_width
+            ,   (unsigned long long)total
+            );
         }
 
         {
@@ -168,19 +180,23 @@ main(void)
 
             if (p99_histogram_min_event_time(&histogram, &min))
             {
-                printf("  %-*s %*llu ns\n",
-                       label_width,
-                       "min_event_time:",
-                       value_width,
-                       (unsigned long long)min);
+                printf(
+                    "  %-*s %*llu ns\n"
+                ,   label_width
+                ,   "min_event_time:"
+                ,   value_width
+                ,   (unsigned long long)min
+                );
             }
             if (p99_histogram_max_event_time(&histogram, &max))
             {
-                printf("  %-*s %*llu ns\n",
-                       label_width,
-                       "max_event_time:",
-                       value_width,
-                       (unsigned long long)max);
+                printf(
+                    "  %-*s %*llu ns\n"
+                ,   label_width
+                ,   "max_event_time:"
+                ,   value_width
+                ,   (unsigned long long)max
+                );
             }
         }
 

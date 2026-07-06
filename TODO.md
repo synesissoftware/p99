@@ -45,7 +45,8 @@
 
 * [x] Release benchmark smoke-run (no timing assertions);
 * [x] Doxygen build on Linux Release;
-* [ ] AddressSanitizer / UndefinedBehaviourSanitizer leg on Linux;
+* [x] AddressSanitizer / UndefinedBehaviourSanitizer leg on Linux (Debug;
+  `ctest` only; no benchmark smoke-run);
 * [ ] Optional Debug benchmark smoke-run (currently Release only, for CI
   time);
 * [x] Explicit Windows MinGW and MSVC matrix targets;
@@ -64,13 +65,12 @@
 * [x] Simplify struct flags — `has_min_event_time` / `has_max_event_time`
   removed; min/max validity follows `event_count` (layout still 552 / 296
   B on 64-bit);
-* [ ] Document ABI/layout stability policy for 1.x (public
-  `p99_histogram_t` is an ABI contract);
-* [ ] Define and implement `event_count` overflow policy (`size_t`
-  increment is currently unchecked; compact layout checks per-bucket
-  `UINT32_MAX` only);
-* [ ] Keep `P99_VER_*` header macros in sync with CMake `PROJECT_VERSION`
-  (or document the manual update process);
+* [x] Document ABI/layout stability policy for 1.x (public
+  `p99_histogram_t` is an ABI contract; see [ABI.md](./ABI.md));
+* [x] Define `event_count` overflow policy — `uint64_t` field; increment
+  past `UINT64_MAX` is undefined behaviour (documented in **ABI.md**);
+* [x] Keep `P99_VER_*` header macros in sync with CMake `PROJECT_VERSION`
+  (CMake parses **include/p99/p99.h**; see Synesis sibling libraries);
 
 ### Platform
 
@@ -93,14 +93,17 @@
 
 ### Consumer integration
 
-* [ ] vcpkg overlay port and/or `FetchContent` consumer sample;
-* [ ] `CONTRIBUTING.md` and release/versioning policy;
+* [x] vcpkg overlay port and/or `FetchContent` consumer sample (see
+  [vcpkg/README.md](./vcpkg/README.md) and
+  [test/scratch/consumer_fetchcontent](./test/scratch/consumer_fetchcontent/));
+* [x] `CONTRIBUTING.md` and release/versioning policy;
 
 ### Documentation and conventions
 
 * [ ] DOC_76 comment-width checker (76 columns for comments only);
-* [ ] Align file banner style with Synesis sibling libraries (if desired);
-* [ ] Complete README API overview table (`bucket_value`, `buckets`, etc.);
+* [x] Align file banner style with Synesis sibling libraries (hybrid Doxygen
+  banners with Home / Created / Updated; see **include/p99/p99.h**);
+* [x] Complete README API overview table (`bucket_value`, `buckets`, etc.);
 * [ ] Fix minor `p99.h` doc typo (`reduing` → `reducing`);
 * [ ] Complete Doxygen `@param` coverage for warning-free doc builds;
 

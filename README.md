@@ -20,10 +20,18 @@ Low-cost generation of performance percentiles (p50, p90, p99, p99.9, etc.).
 - [Installation](#installation)
 - [Using the Library](#using-the-library)
   - [CMake](#cmake)
+    - [FetchContent](#fetchcontent)
+    - [Via vcpkg](#via-vcpkg)
   - [pkg-config](#pkg-config)
   - [Manual linking](#manual-linking)
 - [API Overview](#api-overview)
   - [`p99_histogram_t`](#p99_histogram_t)
+  - [Types and constants](#types-and-constants)
+  - [Functions](#functions)
+    - [Lifecycle](#lifecycle)
+    - [Recording](#recording)
+    - [Statistics](#statistics)
+    - [Percentiles](#percentiles)
   - [Minimal Example](#minimal-example)
 - [Examples](#examples)
 - [Benchmarks](#benchmarks)
@@ -31,6 +39,7 @@ Low-cost generation of performance percentiles (p50, p90, p99, p99.9, etc.).
 - [Project Information](#project-information)
   - [Where to get help](#where-to-get-help)
   - [Contribution guidelines](#contribution-guidelines)
+  - [ABI stability](#abi-stability)
   - [Dependencies](#dependencies)
   - [License](#license)
 
@@ -156,6 +165,80 @@ add_subdirectory(path/to/p99)
 target_link_libraries(myapp PRIVATE p99::p99)
 ```
 
+Disable **p99**'s own tests, examples, and benchmarks when embedding:
+
+```cmake
+set(P99_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+add_subdirectory(path/to/p99)
+target_link_libraries(myapp PRIVATE p99::p99)
+```
+
+#### FetchContent
+
+Download **p99** at configure time (no system install and no submodule):
+
+```cmake
+cmake_minimum_required(VERSION 3.16)
+project(myapp C)
+
+include(FetchContent)
+
+set(P99_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(P99_BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+    p99
+    GIT_REPOSITORY https://github.com/synesissoftware/p99.git
+    GIT_TAG        0.1.0
+)
+FetchContent_MakeAvailable(p99)
+
+add_executable(myapp main.c)
+target_link_libraries(myapp PRIVATE p99::p99)
+```
+
+Pin `GIT_TAG` to a [release tag](https://github.com/synesissoftware/p99/releases)
+or a commit SHA for reproducible builds. A local smoke consumer lives under
+[**test/scratch/consumer_fetchcontent**](test/scratch/consumer_fetchcontent).
+
+#### Via vcpkg
+
+An overlay port ships in [**vcpkg/ports/p99**](vcpkg/ports/p99/) (see
+[**vcpkg/README.md**](vcpkg/README.md)). Install into your vcpkg instance:
+
+```bash
+/path/to/vcpkg install p99 --overlay-ports=/path/to/p99/vcpkg/ports
+```
+
+For the latest **master** (instead of the pinned port version):
+
+```bash
+/path/to/vcpkg install p99 --overlay-ports=/path/to/p99/vcpkg/ports --head
+```
+
+Configure your project with the vcpkg toolchain file, then:
+
+```cmake
+cmake_minimum_required(VERSION 3.16)
+project(myapp C)
+
+find_package(p99 CONFIG REQUIRED)
+
+add_executable(myapp main.c)
+target_link_libraries(myapp PRIVATE p99::p99)
+```
+
+Example:
+
+```bash
+cmake -B _build -S . \
+  -DCMAKE_TOOLCHAIN_FILE=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
+cmake --build _build
+```
+
 ### pkg-config
 
 ```bash
@@ -184,21 +267,85 @@ gcc myapp.c -I/usr/local/include -L/usr/local/lib -lp99 -lm -o myapp
 
 A low-cost, zero-allocation, 64-bucket logarithmic histogram designed for
 recording event durations in nanoseconds and querying high-resolution
-percentiles.
+percentiles. **552 bytes** on 64-bit platforms by default (**296 bytes**
+with `P99_COMPACT_HISTOGRAM`). See [ABI.md](./ABI.md) for layout and
+stability guarantees.
 
 Predicate and status returns use `p99_truthy_t` (`int`): `P99_FALSE` (0) or
 `P99_TRUE` (1). The public header does not require C99 `<stdbool.h>`.
 
-Key functions:
+### Types and constants
 
-| Category | Functions |
-|----------|-----------|
-| Lifecycle | `p99_histogram_init`, `p99_histogram_clear` |
-| Recording | `p99_histogram_push_event_time_ns`, `_us`, `_ms`, `_s` |
-| Statistics | `p99_histogram_event_count`, `_min_event_time`, `_max_event_time`, `_event_time_total` |
-| Percentiles | `p99_histogram_value_at_percentile`, `_value_at_p50`, `_p75`, `_p90`, `_p95`, `_p99`, ... |
+| Symbol | Description |
+|--------|-------------|
+| `p99_histogram_t` | Fixed-size histogram (stack or embed); see [ABI.md](./ABI.md) |
+| `p99_bucket_count_t` | `uint64_t` per bucket (default); `uint32_t` when `P99_COMPACT_HISTOGRAM` is defined |
+| `p99_truthy_t` | `int` used for predicate / status returns |
+| `P99_FALSE`, `P99_TRUE` | `0` and `1` |
+| `P99_BUCKET_COUNT` | Number of logarithmic buckets (`64`) |
+| `P99_COMPACT_HISTOGRAM` | Optional compile flag for the 296-byte layout |
+| `P99_VER_MAJOR`, `P99_VER_MINOR`, `P99_VER_PATCH` | Version components (canonical; CMake reads these from the header) |
+| `P99_VER`, `P99_VER_STRING` | Composite and string forms of the version |
 
-See [`include/p99/p99.h`](include/p99/p99.h) for full documentation.
+### Functions
+
+#### Lifecycle
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_init` | Zero-initialise a histogram |
+| `p99_histogram_clear` | Reset a histogram (same as `init`) |
+
+#### Recording
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_push_event_time_ns` | Record a duration in nanoseconds |
+| `p99_histogram_push_event_time_us` | Record a duration in microseconds |
+| `p99_histogram_push_event_time_ms` | Record a duration in milliseconds |
+| `p99_histogram_push_event_time_s` | Record a duration in seconds |
+
+Returns `P99_TRUE` on success; `P99_FALSE` if overflow has already occurred,
+the running total would overflow, or unit conversion would overflow.
+
+#### Statistics
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_event_count` | Number of events recorded (`uint64_t`) |
+| `p99_histogram_event_time_total` | Total duration (ns) if no overflow; `P99_FALSE` otherwise |
+| `p99_histogram_event_time_total_raw` | Total duration (ns) regardless of overflow |
+| `p99_histogram_has_overflowed` | Whether an arithmetic overflow occurred |
+| `p99_histogram_min_event_time` | Minimum observed duration (ns); `P99_FALSE` if empty |
+| `p99_histogram_max_event_time` | Maximum observed duration (ns); `P99_FALSE` if empty |
+| `p99_histogram_bucket_value` | Count for bucket `index`; `P99_FALSE` if out of range |
+| `p99_histogram_buckets` | Read-only pointer to `P99_BUCKET_COUNT` bucket counts |
+
+Min/max are valid when `event_count > 0` (see [ABI.md](./ABI.md)).
+Incrementing `event_count` past `UINT64_MAX` is undefined behaviour.
+
+#### Percentiles
+
+All percentile queries return an approximated duration in nanoseconds and
+`P99_FALSE` when the histogram is empty. `p99_histogram_value_at_percentile`
+clamps `percentile` to `[0.0, 100.0]`.
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_value_at_percentile` | Arbitrary percentile (`double`) |
+| `p99_histogram_value_at_p50` | p50 |
+| `p99_histogram_value_at_p75` | p75 |
+| `p99_histogram_value_at_p90` | p90 |
+| `p99_histogram_value_at_p95` | p95 |
+| `p99_histogram_value_at_p99` | p99 |
+| `p99_histogram_value_at_p99_5` | p99.5 |
+| `p99_histogram_value_at_p99_9` | p99.9 |
+| `p99_histogram_value_at_p99_99` | p99.99 |
+| `p99_histogram_value_at_p99_999` | p99.999 |
+| `p99_histogram_value_at_p99_999_9` | p99.9999 |
+
+Parameter and return details are in [`include/p99/p99.h`](include/p99/p99.h) and
+the [API documentation](#api-documentation) (Doxygen).
 
 
 ### Minimal Example
@@ -218,7 +365,7 @@ int main(void)
     p99_histogram_push_event_time_us(&histogram, 5);
     p99_histogram_push_event_time_ms(&histogram, 10);
 
-    printf("events: %zu\n", p99_histogram_event_count(&histogram));
+    printf("events: %llu\n", p99_histogram_event_count(&histogram));
 
     if (p99_histogram_value_at_p99(&histogram, &value)) {
         printf("p99: %llu ns\n", (unsigned long long)value);
@@ -297,6 +444,16 @@ installed; it is for local development and release publishing.
 
 Defect reports, feature requests, and pull requests are welcome on
 https://github.com/synesissoftware/p99.
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, coding
+standards, and release policy.
+
+
+### ABI stability
+
+The C struct layout and linking rules are documented in [ABI.md](./ABI.md).
+Before **1.0**, the layout may still change between **0.x** releases; each
+release updates **ABI.md** and **CHANGES.md**.
 
 
 ### Dependencies
