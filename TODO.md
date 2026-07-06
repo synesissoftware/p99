@@ -84,7 +84,8 @@
 ## Performance improvements
 
 * [ ] ⏸️ binary scaling; deferred past v0.1.0;
-* [ ] multi-percentile retrieval;
+* [x] multi-percentile retrieval (`p99_histogram_values_at_percentiles`,
+  `p99_histogram_values_at_fixed_percentiles`; single-pass bucket walks);
 
 
 ## Packaging improvements
