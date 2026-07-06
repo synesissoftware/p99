@@ -151,14 +151,14 @@ public: // modifiers
 
     /** Push a new event time from a duration. */
     template<
-        typename Rep
-    ,   typename Period
+        typename T_rep
+    ,   typename T_period
     >
     bool push_duration(
-        std::chrono::duration<Rep, Period> const& duration
+        std::chrono::duration<T_rep, T_period> const& duration
     )
     {
-        typedef std::chrono::duration<Rep, Period>          duration_type_;
+        typedef std::chrono::duration<T_rep, T_period>          duration_type_;
 
         if (duration < duration_type_::zero())
         {
