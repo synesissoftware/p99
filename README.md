@@ -31,6 +31,7 @@ Low-cost generation of performance percentiles (p50, p90, p99, p99.9, etc.).
 - [Project Information](#project-information)
   - [Where to get help](#where-to-get-help)
   - [Contribution guidelines](#contribution-guidelines)
+  - [ABI stability](#abi-stability)
   - [Dependencies](#dependencies)
   - [License](#license)
 
@@ -184,7 +185,9 @@ gcc myapp.c -I/usr/local/include -L/usr/local/lib -lp99 -lm -o myapp
 
 A low-cost, zero-allocation, 64-bucket logarithmic histogram designed for
 recording event durations in nanoseconds and querying high-resolution
-percentiles.
+percentiles. **552 bytes** on 64-bit platforms by default (**296 bytes**
+with `P99_COMPACT_HISTOGRAM`). See [ABI.md](./ABI.md) for layout and
+stability guarantees.
 
 Predicate and status returns use `p99_truthy_t` (`int`): `P99_FALSE` (0) or
 `P99_TRUE` (1). The public header does not require C99 `<stdbool.h>`.
@@ -300,6 +303,13 @@ https://github.com/synesissoftware/p99.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, coding
 standards, and release policy.
+
+
+### ABI stability
+
+The C struct layout and linking rules are documented in [ABI.md](./ABI.md).
+Before **1.0**, the layout may still change between **0.x** releases; each
+release updates **ABI.md** and **CHANGES.md**.
 
 
 ### Dependencies

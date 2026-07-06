@@ -62,8 +62,8 @@
 * [x] Simplify struct flags — `has_min_event_time` / `has_max_event_time`
   removed; min/max validity follows `event_count` (layout still 552 / 296
   B on 64-bit);
-* [ ] Document ABI/layout stability policy for 1.x (public
-  `p99_histogram_t` is an ABI contract);
+* [x] Document ABI/layout stability policy for 1.x (public
+  `p99_histogram_t` is an ABI contract; see [ABI.md](./ABI.md));
 * [ ] Define and implement `event_count` overflow policy (`size_t`
   increment is currently unchecked; compact layout checks per-bucket
   `UINT32_MAX` only);

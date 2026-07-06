@@ -116,10 +116,10 @@ before merge.
 
 When adding or changing behaviour, update as appropriate:
 
-- [README.md](./README.md) — overview, building, API summary
-- [CHANGES.md](./CHANGES.md) — release notes (not the backlog)
-- [TODO.md](./TODO.md) — planned work and deferrals
-- [ABI.md](./ABI.md) — layout and ABI stability (when present)
+- [README.md](./README.md) — overview, building, API summary;
+- [CHANGES.md](./CHANGES.md) — release notes (not the backlog);
+- [TODO.md](./TODO.md) — planned work and deferrals;
+- [ABI.md](./ABI.md) — layout and ABI stability;
 
 Regenerate HTML API docs locally after header changes if you use Doxygen
 (`./build_cmake.sh p99_docs`).
