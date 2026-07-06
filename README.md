@@ -26,6 +26,8 @@ Low-cost generation of performance percentiles (p50, p90, p99, p99.9, etc.).
   - [Manual linking](#manual-linking)
 - [API Overview](#api-overview)
   - [`p99_histogram_t`](#p99_histogram_t)
+  - [Types and constants](#types-and-constants)
+  - [Functions](#functions)
   - [Minimal Example](#minimal-example)
 - [Examples](#examples)
 - [Benchmarks](#benchmarks)
@@ -268,16 +270,77 @@ stability guarantees.
 Predicate and status returns use `p99_truthy_t` (`int`): `P99_FALSE` (0) or
 `P99_TRUE` (1). The public header does not require C99 `<stdbool.h>`.
 
-Key functions:
+### Types and constants
 
-| Category | Functions |
-|----------|-----------|
-| Lifecycle | `p99_histogram_init`, `p99_histogram_clear` |
-| Recording | `p99_histogram_push_event_time_ns`, `_us`, `_ms`, `_s` |
-| Statistics | `p99_histogram_event_count`, `_min_event_time`, `_max_event_time`, `_event_time_total` |
-| Percentiles | `p99_histogram_value_at_percentile`, `_value_at_p50`, `_p75`, `_p90`, `_p95`, `_p99`, ... |
+| Symbol | Description |
+|--------|-------------|
+| `p99_histogram_t` | Fixed-size histogram (stack or embed); see [ABI.md](./ABI.md) |
+| `p99_bucket_count_t` | `uint64_t` per bucket (default); `uint32_t` when `P99_COMPACT_HISTOGRAM` is defined |
+| `p99_truthy_t` | `int` used for predicate / status returns |
+| `P99_FALSE`, `P99_TRUE` | `0` and `1` |
+| `P99_BUCKET_COUNT` | Number of logarithmic buckets (`64`) |
+| `P99_COMPACT_HISTOGRAM` | Optional compile flag for the 296-byte layout |
+| `P99_VER_MAJOR`, `P99_VER_MINOR`, `P99_VER_PATCH` | Version components (canonical; CMake reads these from the header) |
+| `P99_VER`, `P99_VER_STRING` | Composite and string forms of the version |
 
-See [`include/p99/p99.h`](include/p99/p99.h) for full documentation.
+### Functions
+
+#### Lifecycle
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_init` | Zero-initialise a histogram |
+| `p99_histogram_clear` | Reset a histogram (same as `init`) |
+
+#### Recording
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_push_event_time_ns` | Record a duration in nanoseconds |
+| `p99_histogram_push_event_time_us` | Record a duration in microseconds |
+| `p99_histogram_push_event_time_ms` | Record a duration in milliseconds |
+| `p99_histogram_push_event_time_s` | Record a duration in seconds |
+
+Returns `P99_TRUE` on success; `P99_FALSE` if overflow has already occurred,
+the running total would overflow, or unit conversion would overflow.
+
+#### Statistics
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_event_count` | Number of events recorded |
+| `p99_histogram_event_time_total` | Total duration (ns) if no overflow; `P99_FALSE` otherwise |
+| `p99_histogram_event_time_total_raw` | Total duration (ns) regardless of overflow |
+| `p99_histogram_has_overflowed` | Whether an arithmetic overflow occurred |
+| `p99_histogram_min_event_time` | Minimum observed duration (ns); `P99_FALSE` if empty |
+| `p99_histogram_max_event_time` | Maximum observed duration (ns); `P99_FALSE` if empty |
+| `p99_histogram_bucket_value` | Count for bucket `index`; `P99_FALSE` if out of range |
+| `p99_histogram_buckets` | Read-only pointer to `P99_BUCKET_COUNT` bucket counts |
+
+Min/max are valid when `event_count > 0` (see [ABI.md](./ABI.md)).
+
+#### Percentiles
+
+All percentile queries return an approximated duration in nanoseconds and
+`P99_FALSE` when the histogram is empty. `p99_histogram_value_at_percentile`
+clamps `percentile` to `[0.0, 100.0]`.
+
+| Function | Description |
+|----------|-------------|
+| `p99_histogram_value_at_percentile` | Arbitrary percentile (`double`) |
+| `p99_histogram_value_at_p50` | p50 |
+| `p99_histogram_value_at_p75` | p75 |
+| `p99_histogram_value_at_p90` | p90 |
+| `p99_histogram_value_at_p95` | p95 |
+| `p99_histogram_value_at_p99` | p99 |
+| `p99_histogram_value_at_p99_5` | p99.5 |
+| `p99_histogram_value_at_p99_9` | p99.9 |
+| `p99_histogram_value_at_p99_99` | p99.99 |
+| `p99_histogram_value_at_p99_999` | p99.999 |
+| `p99_histogram_value_at_p99_999_9` | p99.9999 |
+
+Parameter and return details are in [`include/p99/p99.h`](include/p99/p99.h) and
+the [API documentation](#api-documentation) (Doxygen).
 
 
 ### Minimal Example
