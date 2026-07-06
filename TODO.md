@@ -27,6 +27,7 @@
 ## Performance improvements
 
 * [ ] binary scaling;
+* [ ] multi-percentile retrieval;
 
 
 ## Packaging improvements
