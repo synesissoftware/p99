@@ -55,7 +55,7 @@ try_add_ns_to_total_and_update_minmax_(
 
     histogram->event_time_total += time_in_ns;
 
-    if (histogram->event_count == 0)
+    if (0 == histogram->event_count)
     {
         histogram->min_event_time = time_in_ns;
         histogram->max_event_time = time_in_ns;
@@ -86,7 +86,7 @@ value_at_target_rank(
     uint64_t accumulated = 0;
     size_t   i;
 
-    if (histogram->event_count == 0)
+    if (0 == histogram->event_count)
     {
         return P99_FALSE;
     }
@@ -125,7 +125,7 @@ value_at_target_rank(
                     uint64_t target_offset = target_rank - prev_accumulated;
                     uint64_t range_width;
 
-                    if (i == 63)
+                    if ((P99_BUCKET_COUNT - 1) == i)
                     {
                         range_width = UINT64_MAX - lower;
                     }
@@ -335,7 +335,7 @@ p99_histogram_min_event_time(
 ,   uint64_t* min
 )
 {
-    if (histogram->event_count == 0)
+    if (0 == histogram->event_count)
     {
         return P99_FALSE;
     }
@@ -351,7 +351,7 @@ p99_histogram_max_event_time(
 ,   uint64_t* max
 )
 {
-    if (histogram->event_count == 0)
+    if (0 == histogram->event_count)
     {
         return P99_FALSE;
     }
@@ -397,7 +397,7 @@ p99_histogram_value_at_percentile(
     double      target_rank;
     uint64_t    accumulated = 0;
 
-    if (histogram->event_count == 0)
+    if (0 == histogram->event_count)
     {
         return P99_FALSE;
     }
@@ -453,7 +453,7 @@ p99_histogram_value_at_percentile(
 
                 target_offset = target_rank - (double)prev_accumulated;
 
-                if (i == 63)
+                if ((P99_BUCKET_COUNT - 1) == i)
                 {
                     range_width = (double)(UINT64_MAX - lower);
                 }
@@ -706,7 +706,7 @@ p99_histogram_bucket_range_(
         return P99_FALSE;
     }
 
-    if (index == 0)
+    if (0 == index)
     {
         *lower = 0;
         *upper = 1;
@@ -716,7 +716,7 @@ p99_histogram_bucket_range_(
 
     *lower = 1ULL << index;
 
-    if (index == 63)
+    if ((P99_BUCKET_COUNT - 1) == index)
     {
         *upper = UINT64_MAX;
     }

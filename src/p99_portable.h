@@ -172,7 +172,7 @@ p99_div_u128_u64_(
 ,   uint64_t divisor
 )
 {
-    if (high == 0)
+    if (0 == high)
     {
         return low / divisor;
     }

@@ -49,7 +49,7 @@ benchmark_time_ns(void)
     static LARGE_INTEGER frequency = {0};
     LARGE_INTEGER counter;
 
-    if (frequency.QuadPart == 0)
+    if (0 == frequency.QuadPart)
     {
         QueryPerformanceFrequency(&frequency);
     }
