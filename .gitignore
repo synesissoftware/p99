@@ -1,5 +1,6 @@
 # Build artifacts
 
+_build/
 build/
 build-compact/
 build-docs/

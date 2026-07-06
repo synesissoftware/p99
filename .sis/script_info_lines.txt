@@ -1,0 +1,2 @@
+p99 is a low-cost C library for generating performance percentiles (p50, p90, p99, etc.).
+Copyright (c) 2026, Matthew Wilson and Synesis Information Systems

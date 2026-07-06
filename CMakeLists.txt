@@ -20,6 +20,20 @@ option(P99_BUILD_BENCHMARKS "Build benchmark programs" ON)
 option(P99_BUILD_DOCS "Build API documentation with Doxygen" OFF)
 option(P99_COMPACT_HISTOGRAM "Use compact histogram layout (<=512 bytes)" OFF)
 
+# Absorbed by prepare_cmake.sh --msvc-mt (Synesis helper scripts).
+option(MSVC_USE_MT "Use static MSVC runtime (/MT)" OFF)
+
+if(MSVC)
+    if(MSVC_USE_MT)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    endif()
+else()
+    if(MSVC_USE_MT)
+        # Present so prepare_cmake.sh can pass -DMSVC_USE_MT without unused-
+        # variable warnings on non-MSVC toolchains.
+    endif()
+endif()
+
 if(NOT P99_BUILD_SHARED AND NOT P99_BUILD_STATIC)
     message(FATAL_ERROR "At least one of P99_BUILD_SHARED or P99_BUILD_STATIC must be ON")
 endif()
