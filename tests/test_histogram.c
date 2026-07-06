@@ -164,8 +164,8 @@ assert_scalar_cmp_u64(
     ,   expected_comparand_string
     ,   comparand_string
     ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
+    ,   expected
+    ,   actual
     );
 
     ++g_tests_failed;
@@ -196,8 +196,8 @@ assert_scalar_eq_approx_u64(
     ,   func
     ,   expected_comparand_string
     ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
+    ,   expected
+    ,   actual
     ,   tolerance
     );
 
@@ -210,10 +210,10 @@ TEST(test_version)
 {
     ASSERT_EQ_SIZE(0, P99_VER_MAJOR);
     ASSERT_EQ_SIZE(1, P99_VER_MINOR);
-    ASSERT_EQ_SIZE(0, P99_VER_PATCH);
-    ASSERT_EQ_SIZE(0, P99_VER_REVISION);
-    ASSERT_EQ_SIZE(0xFF, P99_VER_ALPHABETA);
-    ASSERT_EQ_SIZE(0x000100FF, P99_VER);
+    ASSERT_EQ_SIZE(1, P99_VER_PATCH);
+    ASSERT_EQ_SIZE(1, P99_VER_REVISION);
+    ASSERT_EQ_SIZE(0x41, P99_VER_ALPHABETA);
+    ASSERT_EQ_SIZE(0x00010141, P99_VER);
 }
 
 TEST(test_histogram_struct_size)
