@@ -298,6 +298,9 @@ installed; it is for local development and release publishing.
 Defect reports, feature requests, and pull requests are welcome on
 https://github.com/synesissoftware/p99.
 
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for development setup, coding
+standards, and release policy.
+
 
 ### Dependencies
 
