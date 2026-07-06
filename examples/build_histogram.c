@@ -86,10 +86,11 @@ main(void)
         parsed = strtol(env, &end, 10);
         if (end == env || *end != '\0' || parsed <= 0)
         {
-            fprintf(stderr,
-                    "Warning: failed to parse P99_TRIES value '%s', "
-                    "defaulting to 100\n",
-                    env);
+            fprintf(
+                stderr
+            ,   "Warning: failed to parse P99_TRIES value '%s'; defaulting to 100\n"
+            ,   env
+            );
         }
         else
         {
@@ -141,30 +142,36 @@ main(void)
         int const value_width = 10;
 
         printf("\nHistogram summary:\n");
-        printf("  %-*s %*llu\n",
-               label_width,
-               "event_count:",
-               value_width,
-               (unsigned long long)p99_histogram_event_count(&histogram));
+        printf(
+            "  %-*s %*llu\n"
+        ,   label_width
+        ,   "event_count:"
+        ,   value_width
+        ,   (unsigned long long)p99_histogram_event_count(&histogram)
+        );
 
         if (p99_histogram_has_overflowed(&histogram))
         {
-            printf("  %-*s %*s\n",
-                   label_width,
-                   "event_time_total:",
-                   value_width + 3,
-                   "<overflow>");
+            printf(
+                "  %-*s %*s\n"
+            ,   label_width
+            ,   "event_time_total:"
+            ,   value_width + 3
+            ,   "<overflow>"
+            );
         }
         else
         {
             uint64_t total;
 
             p99_histogram_event_time_total(&histogram, &total);
-            printf("  %-*s %*llu ns\n",
-                   label_width,
-                   "event_time_total:",
-                   value_width,
-                   (unsigned long long)total);
+            printf(
+                "  %-*s %*llu ns\n"
+            ,   label_width
+            ,   "event_time_total:"
+            ,   value_width
+            ,   (unsigned long long)total
+            );
         }
 
         {
@@ -173,19 +180,23 @@ main(void)
 
             if (p99_histogram_min_event_time(&histogram, &min))
             {
-                printf("  %-*s %*llu ns\n",
-                       label_width,
-                       "min_event_time:",
-                       value_width,
-                       (unsigned long long)min);
+                printf(
+                    "  %-*s %*llu ns\n"
+                ,   label_width
+                ,   "min_event_time:"
+                ,   value_width
+                ,   (unsigned long long)min
+                );
             }
             if (p99_histogram_max_event_time(&histogram, &max))
             {
-                printf("  %-*s %*llu ns\n",
-                       label_width,
-                       "max_event_time:",
-                       value_width,
-                       (unsigned long long)max);
+                printf(
+                    "  %-*s %*llu ns\n"
+                ,   label_width
+                ,   "max_event_time:"
+                ,   value_width
+                ,   (unsigned long long)max
+                );
             }
         }
 
@@ -196,20 +207,28 @@ main(void)
 
 #define PRINT_PERCENTILE(label, fn)                                         \
                                                                             \
-            if (fn(&histogram, &value)) \
-            { \
-                printf("  %-18s %*llu ns\n", label, value_width,            \
-                       (unsigned long long)value);                          \
-            } \
-            else \
-            { \
+            if (fn(&histogram, &value))                                     \
+            {                                                               \
+                printf(                                                     \
+                    "  %-18s %*llu ns\n"                                    \
+                ,   label                                                   \
+                ,   value_width                                             \
+                ,   (unsigned long long)value                               \
+            );                                                              \
+            }                                                               \
+            else                                                            \
+            {                                                               \
                 printf("  %-18s %*s\n", label, value_width + 3, "(none)");  \
             }
 
             if (p99_histogram_value_at_percentile(&histogram, 50.0, &value))
             {
-                printf("  %-18s %*llu ns\n", "p50 (f64):", value_width,
-                       (unsigned long long)value);
+                printf(
+                    "  %-18s %*llu ns\n"
+                ,   "p50 (f64):"
+                ,   value_width
+                ,   (unsigned long long)value
+                );
             }
 
             PRINT_PERCENTILE("p50 (integer):", p99_histogram_value_at_p50);

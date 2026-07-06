@@ -365,8 +365,7 @@ int main(void)
     p99_histogram_push_event_time_us(&histogram, 5);
     p99_histogram_push_event_time_ms(&histogram, 10);
 
-    printf("events: %llu\n",
-           (unsigned long long)p99_histogram_event_count(&histogram));
+    printf("events: %llu\n", (unsigned long long)p99_histogram_event_count(&histogram));
 
     if (p99_histogram_value_at_p99(&histogram, &value)) {
         printf("p99: %llu ns\n", (unsigned long long)value);
