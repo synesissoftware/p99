@@ -3,6 +3,7 @@
 _build/
 build/
 build-compact/
+build-cpp/
 build-docs/
 build-refactor/
 build-test/

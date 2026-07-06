@@ -32,8 +32,8 @@
  */
 
 #define P99_VER_MAJOR                                       0
-#define P99_VER_MINOR                                       0
-#define P99_VER_PATCH                                       1
+#define P99_VER_MINOR                                       2
+#define P99_VER_PATCH                                       0
 #define P99_VER_ALPHABETA                                   0x41
 
 #define P99_VER \

@@ -47,6 +47,7 @@ endif()
 set(P99_SOURCES src/histogram.c)
 set(P99_HEADERS
     include/p99/p99.h
+    include/p99/p99.hpp
 )
 
 set(P99_COMPILE_OPTIONS
@@ -54,6 +55,13 @@ set(P99_COMPILE_OPTIONS
     $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>
     $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
     $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>
+)
+
+set(P99_CXX_COMPILE_OPTIONS
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>
 )
 
 set(P99_LIBRARY_COMPILE_OPTIONS
@@ -108,6 +116,16 @@ function(p99_link_consumer target)
     endif()
 endfunction()
 
+function(p99_configure_cxx_consumer target)
+    p99_link_consumer(${target})
+    target_compile_options(${target} PRIVATE ${P99_CXX_COMPILE_OPTIONS})
+    set_target_properties(${target} PROPERTIES
+        CXX_STANDARD 20
+        CXX_STANDARD_REQUIRED ON
+        CXX_EXTENSIONS OFF
+    )
+endfunction()
+
 if(P99_BUILD_SHARED)
     add_library(p99_shared SHARED ${P99_SOURCES})
     add_library(p99::p99 ALIAS p99_shared)
@@ -148,6 +166,13 @@ if(P99_BUILD_TESTS)
     )
     add_test(NAME histogram COMMAND p99_test)
     set_tests_properties(histogram PROPERTIES TIMEOUT 120)
+
+    enable_language(CXX)
+
+    add_executable(p99_test_cxx tests/test_histogram.cpp)
+    p99_configure_cxx_consumer(p99_test_cxx)
+    add_test(NAME histogram_cpp COMMAND p99_test_cxx)
+    set_tests_properties(histogram_cpp PROPERTIES TIMEOUT 120)
 endif()
 
 # --- Examples --------------------------------------------------------------
@@ -161,6 +186,11 @@ if(P99_BUILD_EXAMPLES)
         C_STANDARD_REQUIRED ON
         C_EXTENSIONS OFF
     )
+
+    enable_language(CXX)
+
+    add_executable(build_histogram_cxx examples/build_histogram_cxx.cpp)
+    p99_configure_cxx_consumer(build_histogram_cxx)
 endif()
 
 # --- Benchmarks ------------------------------------------------------------
