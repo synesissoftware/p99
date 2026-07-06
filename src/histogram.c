@@ -753,6 +753,7 @@ p99_histogram_values_at_percentiles(
     accumulated      = 0;
     has_last         = P99_FALSE;
     last_target_rank = -1.0;
+    last_value       = histogram->min_event_time;
 
     for (; next_element < length; ++next_element)
     {
