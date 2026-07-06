@@ -62,6 +62,24 @@ jobs:
         shell: bash
         run: ctest --test-dir build --output-on-failure --build-config ${{ matrix.build_type }} --timeout 120
 
+      - name: Run benchmarks
+        if: matrix.build_type == 'Release'
+        shell: bash
+        run: |
+          benchmark=""
+          for candidate in build/p99_benchmark build/p99_benchmark.exe; do
+            if [ -f "$candidate" ]; then
+              benchmark="$candidate"
+              break
+            fi
+          done
+          if [ -z "$benchmark" ]; then
+            echo "p99_benchmark executable not found under build/" >&2
+            ls -la build/ >&2 || true
+            exit 1
+          fi
+          "$benchmark"
+
       - name: Install
         run: cmake --install build --prefix "${{ runner.temp }}/install"
 
