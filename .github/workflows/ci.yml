@@ -1,0 +1,178 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+    - dev
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            build_type: Debug
+          - os: ubuntu-latest
+            build_type: Release
+          - os: ubuntu-latest
+            build_type: Debug
+            compact_histogram: ON
+          - os: ubuntu-latest
+            build_type: Release
+            compact_histogram: ON
+          - os: macos-latest
+            build_type: Debug
+          - os: macos-latest
+            build_type: Release
+          - os: windows-latest
+            build_type: Debug
+            toolchain: mingw
+          - os: windows-latest
+            build_type: Release
+            toolchain: mingw
+          - os: windows-latest
+            build_type: Debug
+            toolchain: msvc
+          - os: windows-latest
+            build_type: Release
+            toolchain: msvc
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        shell: bash
+        run: |
+          compact_args=()
+          if [ -n "${{ matrix.compact_histogram }}" ]; then
+            compact_args=(-DP99_COMPACT_HISTOGRAM="${{ matrix.compact_histogram }}")
+          fi
+
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            cmake -B build -A x64 \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              "${compact_args[@]}"
+          elif [ "${{ runner.os }}" = "Windows" ] && \
+               [ "${{ matrix.toolchain }}" = "mingw" ]; then
+            cmake -B build -G "MinGW Makefiles" \
+              -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              "${compact_args[@]}"
+          else
+            cmake -B build \
+              -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}" \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              "${compact_args[@]}"
+          fi
+
+      - name: Build
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            cmake --build build --config ${{ matrix.build_type }}
+          else
+            cmake --build build --config ${{ matrix.build_type }}
+          fi
+
+      - name: Test
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            ctest --test-dir build --output-on-failure \
+              --build-config ${{ matrix.build_type }} --timeout 120
+          else
+            ctest --test-dir build --output-on-failure \
+              --build-config ${{ matrix.build_type }} --timeout 120
+          fi
+
+      - name: Run benchmarks
+        if: matrix.build_type == 'Release'
+        shell: bash
+        run: |
+          benchmark=""
+          for candidate in \
+            build/p99_benchmark \
+            build/p99_benchmark.exe \
+            build/Release/p99_benchmark.exe \
+            build/Debug/p99_benchmark.exe
+          do
+            if [ -f "$candidate" ]; then
+              benchmark="$candidate"
+              break
+            fi
+          done
+          if [ -z "$benchmark" ]; then
+            echo "p99_benchmark executable not found under build/" >&2
+            ls -la build/ >&2 || true
+            ls -la build/Release >&2 || true
+            exit 1
+          fi
+          "$benchmark"
+
+      - name: Install
+        shell: bash
+        run: |
+          if [ "${{ runner.os }}" = "Windows" ] && \
+             [ "${{ matrix.toolchain }}" = "msvc" ]; then
+            cmake --install build --config ${{ matrix.build_type }} \
+              --prefix "${{ runner.temp }}/install"
+          else
+            cmake --install build --prefix "${{ runner.temp }}/install"
+          fi
+
+      - name: Verify pkg-config file
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          test -f "${{ runner.temp }}/install/lib/pkgconfig/p99.pc" || \
+            test -f "${{ runner.temp }}/install/lib64/pkgconfig/p99.pc"
+
+      - name: Verify CMake package config
+        shell: bash
+        run: |
+          test -f "${{ runner.temp }}/install/lib/cmake/p99/p99Config.cmake" || \
+            test -f "${{ runner.temp }}/install/lib64/cmake/p99/p99Config.cmake"
+
+      - name: Build API documentation
+        if: runner.os == 'Linux' && matrix.build_type == 'Release' && matrix.compact_histogram != 'ON'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen
+          cmake -B build-docs -DCMAKE_BUILD_TYPE=Release -DP99_BUILD_DOCS=ON
+          cmake --build build-docs --target p99_docs
+          test -f build-docs/docs/html/index.html
+
+  sanitizer:
+    name: Sanitizer (ASan + UBSan)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        shell: bash
+        run: |
+          cmake -B build \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_C_FLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all -g" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address,undefined"
+
+      - name: Build
+        shell: bash
+        run: cmake --build build
+
+      - name: Test
+        shell: bash
+        env:
+          ASAN_OPTIONS: detect_leaks=1:abort_on_error=1
+          UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
+        run: ctest --test-dir build --output-on-failure --timeout 120

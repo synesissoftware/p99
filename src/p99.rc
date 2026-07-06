@@ -1,0 +1,52 @@
+/**
+ * @file p99.rc
+ * @brief Windows version resource for the p99 DLL.
+ *
+ * Includes @c p99/p99.h for @c P99_VER_* version constants.
+ *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 4th July 2026
+ * Updated: 6th July 2026
+ *
+ * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
+ *   Systems
+ * @license BSD-3-Clause
+ */
+
+#include <winver.h>
+
+#include <p99/p99.h>
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION     P99_VER_MAJOR, P99_VER_MINOR, P99_VER_PATCH, 0
+PRODUCTVERSION  P99_VER_MAJOR, P99_VER_MINOR, P99_VER_PATCH, 0
+FILEFLAGSMASK   VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+FILEFLAGS       VS_FF_DEBUG
+#else
+FILEFLAGS       0
+#endif
+FILEOS          VOS__WINDOWS32
+FILETYPE        VFT_DLL
+FILESUBTYPE     VFT2_UNKNOWN
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "CompanyName",      "Synesis Information Systems"
+            VALUE "FileDescription",  "p99 performance percentile histogram"
+            VALUE "FileVersion",      P99_VER_STRING
+            VALUE "InternalName",     "p99"
+            VALUE "LegalCopyright",   "Copyright (c) 2026, Matthew Wilson and Synesis Information Systems"
+            VALUE "OriginalFilename", "p99.dll"
+            VALUE "ProductName",      "p99"
+            VALUE "ProductVersion",   P99_VER_STRING
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END

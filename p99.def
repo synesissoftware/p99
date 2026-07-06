@@ -1,0 +1,44 @@
+; p99.def
+;
+; Module-definition file for the p99 Windows DLL.
+;
+; Lists the stable public C API from include/p99/p99.h. Internal helpers
+; (e.g. bucket_index / bucket_range) are intentionally omitted.
+;
+; Home:    https://github.com/synesissoftware/p99
+;
+; Created: 4th July 2026
+; Updated: 6th July 2026
+;
+; Copyright (c) 2026, Matthew Wilson and Synesis Information Systems
+; BSD-3-Clause
+
+LIBRARY p99
+
+EXPORTS
+    DllGetVersion
+    p99_histogram_init
+    p99_histogram_clear
+    p99_histogram_push_event_time_ns
+    p99_histogram_push_event_time_us
+    p99_histogram_push_event_time_ms
+    p99_histogram_push_event_time_s
+    p99_histogram_event_count
+    p99_histogram_event_time_total
+    p99_histogram_event_time_total_raw
+    p99_histogram_has_overflowed
+    p99_histogram_min_event_time
+    p99_histogram_max_event_time
+    p99_histogram_bucket_value
+    p99_histogram_buckets
+    p99_histogram_value_at_percentile
+    p99_histogram_value_at_p50
+    p99_histogram_value_at_p75
+    p99_histogram_value_at_p90
+    p99_histogram_value_at_p95
+    p99_histogram_value_at_p99
+    p99_histogram_value_at_p99_5
+    p99_histogram_value_at_p99_9
+    p99_histogram_value_at_p99_99
+    p99_histogram_value_at_p99_999
+    p99_histogram_value_at_p99_999_9
