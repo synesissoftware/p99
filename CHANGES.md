@@ -1,6 +1,12 @@
 # p99 - Changes
 
 
+## 0.2.0-alpha1 - 7th July 2026
+
+* header-only C++ wrapper (`include/p99/p99.hpp`, `p99::histogram`);
+* C++ unit tests (`p99_test_cxx`) and example (`build_histogram_cxx`);
+
+
 ## 0.1.1-alpha1 - 6th July 2026
 
 * tidying;

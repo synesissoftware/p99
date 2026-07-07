@@ -15,8 +15,7 @@
  * Updated: 6th July 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
- *   Systems
- * @license BSD-3-Clause
+ *   Systems. Licensed under the 3-clause BSD License.
  */
 
 #ifndef P99_H
@@ -49,8 +48,8 @@
  */
 
 #define P99_VER_MAJOR                                       0
-#define P99_VER_MINOR                                       1
-#define P99_VER_PATCH                                       1
+#define P99_VER_MINOR                                       2
+#define P99_VER_PATCH                                       0
 #define P99_VER_ALPHABETA                                   0x41
 
 #define P99_VER \

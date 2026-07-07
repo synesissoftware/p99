@@ -14,7 +14,7 @@ main(void)
     if (p99_histogram_value_at_p50(&histogram, &value))
     {
         printf(
-            "p50: %llu ns (%llu events)\n"
+            "p50: %llu ns (%llu event(s))\n"
         ,   (unsigned long long)value
         ,   (unsigned long long)p99_histogram_event_count(&histogram)
         );

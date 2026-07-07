@@ -56,7 +56,9 @@
 
 ### API
 
-* [ ] C++ API (e.g. thin `p99.hpp` RAII wrapper, or defer explicitly);
+* [x] C++ API — header-only `p99.hpp` (`p99::histogram`, composition over
+  `p99_histogram_t`; C++11/17/20 feature gates; `p99_test_cxx`,
+  `build_histogram_cxx`);
 
 ### ABI and correctness
 
