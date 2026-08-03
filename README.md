@@ -41,6 +41,7 @@ Low-cost generation of performance percentiles (p50, p90, p99, p99.9, etc.).
   - [Contribution guidelines](#contribution-guidelines)
   - [ABI stability](#abi-stability)
   - [Dependencies](#dependencies)
+    - [Development Dependencies](#development-dependencies)
   - [License](#license)
 
 
@@ -461,6 +462,13 @@ release updates **ABI.md** and **CHANGES.md**.
 **p99** has no runtime dependencies beyond the C standard library. The
 library is built as C11; consumers need only a C89-or-later compiler for the
 public header (`stddef.h`, `stdint.h`).
+
+
+#### Development Dependencies
+
+* [**BDUT**](https://github.com/synesissoftware/BDUT) — bundled under
+  **include/bundled-software/bdut/** for unit tests; override with
+  `BDUT_ROOT` or an installed `find_package(BDUT)` package
 
 
 ### License
