@@ -1,13 +1,9 @@
 # p99 - Changes <!-- omit in toc -->
 
 
-## 0.2.0-alpha1 - 7th July 2026
-
-* header-only C++ wrapper (`include/p99/p99.hpp`, `p99::histogram`);
-* C++ unit tests (`p99_test_cxx`) and example (`build_histogram_cxx`);
 
 
-## 0.2.0-alpha1 - 7th July 2026
+## 0.3.0-alpha1 - 4th August 2026
 
 * batch percentile queries — `p99_histogram_values_at_percentiles` and `p99_histogram_values_at_fixed_percentiles`, with result types `p99_pr_fp_result_t` and `p99_pr_fixed_results_t` (80-byte fixed set);
 * single-pass bucket walks for both batch APIs (fixed integer ranks and floating-point levels resolved in one cumulative scan);
@@ -15,6 +11,12 @@
 * benchmarks for batch percentile retrieval; unit tests including non-monotonic level order;
 * **ABI.md** and **README.md** updated for new types and symbols;
 * public header reorganised (types before functions; nested section banners);
+
+
+## 0.2.0-alpha1 - 7th July 2026
+
+* header-only C++ wrapper (`include/p99/p99.hpp`, `p99::histogram`);
+* C++ unit tests (`p99_test_cxx`) and example (`build_histogram_cxx`);
 
 
 ## 0.1.1-alpha1 - 6th July 2026
