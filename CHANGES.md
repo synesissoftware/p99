@@ -13,6 +13,11 @@
 * public header reorganised (types before functions; nested section banners);
 
 
+## 0.2.0-alpha2 - 4th August 2026
+
+* moved unit-test program files into separate projects under **test/unit**;
+
+
 ## 0.2.0-alpha1 - 7th July 2026
 
 * header-only C++ wrapper (`include/p99/p99.hpp`, `p99::histogram`);

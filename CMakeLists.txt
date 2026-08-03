@@ -205,7 +205,7 @@ endif()
 if(P99_BUILD_TESTS)
     enable_testing()
 
-    add_executable(p99_test tests/test_histogram.c)
+    add_executable(p99_test test/unit/test_histogram/entry.c)
     p99_link_consumer(p99_test)
     target_compile_options(p99_test PRIVATE ${P99_COMPILE_OPTIONS})
     set_target_properties(p99_test PROPERTIES
@@ -218,7 +218,7 @@ if(P99_BUILD_TESTS)
 
     enable_language(CXX)
 
-    add_executable(p99_test_cxx tests/test_histogram.cpp)
+    add_executable(p99_test_cxx test/unit/test_histogram_cxx/entry.cpp)
     p99_configure_cxx_consumer(p99_test_cxx)
     add_test(NAME histogram_cpp COMMAND p99_test_cxx)
     set_tests_properties(histogram_cpp PROPERTIES TIMEOUT 120)

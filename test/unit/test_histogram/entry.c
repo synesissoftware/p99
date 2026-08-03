@@ -1,5 +1,5 @@
 /**
- * @file test_histogram.c
+ * @file test/unit/test_histogram/entry.c
  * @brief Unit tests for the p99 histogram.
  *
  * Home: https://github.com/synesissoftware/p99
