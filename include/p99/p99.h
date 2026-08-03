@@ -15,8 +15,7 @@
  * Updated: 6th July 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
- *   Systems
- * @license BSD-3-Clause
+ *   Systems. Licensed under the 3-clause BSD License.
  */
 
 #ifndef P99_H
