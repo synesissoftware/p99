@@ -5,7 +5,7 @@
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
- * Updated: 6th July 2026
+ * Updated: 4th August 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
@@ -448,7 +448,10 @@ main(void)
     int const iters_width = 10;
 
     printf("p99 histogram benchmarks\n");
-    printf("(build with -DCMAKE_BUILD_TYPE=Release for meaningful results)\n\n");
+#ifndef NDEBUG
+    printf("(build with -DCMAKE_BUILD_TYPE=Release for meaningful results)\n");
+#endif
+    printf("\n");
 
     build_sequential_histogram(&g_seq_histogram);
     build_wide_range_histogram(&g_wide_histogram);
