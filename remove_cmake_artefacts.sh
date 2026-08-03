@@ -4,6 +4,7 @@ ScriptPath=$0
 Dir=$(cd $(dirname "$ScriptPath"); pwd)
 Basename=$(basename "$ScriptPath")
 CMakeDir=${SIS_CMAKE_BUILD_DIR:-$Dir/_build}
+ProjectName=$(cat "$Dir/.sis/project_name.txt")
 
 Directories=(
   CMakeFiles
@@ -23,7 +24,7 @@ Files=(
   Makefile
   cmake_install.cmake
   install_manifest.txt
-  p99.pc
+  ${ProjectName}.pc
 )
 
 
