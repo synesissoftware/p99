@@ -352,3 +352,16 @@ install(FILES
 # --- pkg-config variable for consumers -------------------------------------
 
 set(P99_PC_LIBS "-L\${libdir} -lp99")
+
+
+# ##########################################################
+# completion
+
+#[====[
+message(NOTICE "Generating CMake build scripts for ${PROJECT_NAME} ${PROJECT_VERSION}, for C${CMAKE_C_STANDARD} C++${CMAKE_CXX_STANDARD}, with build type ${CMAKE_BUILD_TYPE}")
+#]====]
+message(NOTICE "Generating CMake build scripts for ${PROJECT_NAME} ${PROJECT_VERSION}, with build type ${CMAKE_BUILD_TYPE}")
+
+
+# ############################## end of file ############################# #
+
