@@ -1,4 +1,4 @@
-# p99 - Changes
+# p99 - Changes <!-- omit in toc -->
 
 
 ## 0.2.0-alpha1 - 7th July 2026
