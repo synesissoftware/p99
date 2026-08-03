@@ -1,5 +1,5 @@
 /**
- * @file test_histogram.c
+ * @file test/unit/test_histogram/entry.c
  * @brief Unit tests for the p99 histogram.
  *
  * Home: https://github.com/synesissoftware/p99
@@ -212,8 +212,8 @@ TEST(test_version)
     ASSERT_EQ_SIZE(2, P99_VER_MINOR);
     ASSERT_EQ_SIZE(0, P99_VER_PATCH);
     ASSERT_EQ_SIZE(0, P99_VER_REVISION);
-    ASSERT_EQ_SIZE(0x41, P99_VER_ALPHABETA);
-    ASSERT_EQ_SIZE(0x00020041, P99_VER);
+    ASSERT_EQ_SIZE(0x42, P99_VER_ALPHABETA);
+    ASSERT_EQ_SIZE(0x00020042, P99_VER);
 }
 
 TEST(test_histogram_struct_size)

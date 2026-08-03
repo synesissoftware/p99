@@ -113,8 +113,8 @@ Total size:
 - Default: 40 + 64 × 8 = **552**
 - Compact: 40 + 64 × 4 = **296**
 
-Unit tests in **tests/test_histogram.c** (`test_histogram_struct_size`)
-assert these sizes on the CI platforms.
+Unit tests in **test/unit/test_histogram/entry.c**
+(`test_histogram_struct_size`) assert these sizes on the CI platforms.
 
 
 ## Field semantics

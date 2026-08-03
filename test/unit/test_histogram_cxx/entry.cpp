@@ -1,5 +1,5 @@
 /**
- * @file test_histogram.cpp
+ * @file test/unit/test_histogram_cxx/entry.cpp
  * @brief Unit tests for the p99 C++ histogram wrapper.
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
