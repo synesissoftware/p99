@@ -1,8 +1,6 @@
 # p99 - Changes <!-- omit in toc -->
 
 
-
-
 ## 0.3.0-alpha1 - 4th August 2026
 
 * batch percentile queries — `p99_histogram_values_at_percentiles` and `p99_histogram_values_at_fixed_percentiles`, with result types `p99_pr_fp_result_t` and `p99_pr_fixed_results_t` (80-byte fixed set);
@@ -11,6 +9,11 @@
 * benchmarks for batch percentile retrieval; unit tests including non-monotonic level order;
 * **ABI.md** and **README.md** updated for new types and symbols;
 * public header reorganised (types before functions; nested section banners);
+
+
+## 0.2.0 - 4th August 2026
+
+* 0.2.0;
 
 
 ## 0.2.0-alpha2 - 4th August 2026
