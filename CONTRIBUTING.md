@@ -56,8 +56,9 @@ Licensing: contributions are accepted under the same
 
 ## Development setup
 
-**p99** has no third-party runtime dependencies. To configure, build, and
-test:
+**p99** has no third-party runtime dependencies. Unit tests use bundled
+**BDUT** (or an external tree via `BDUT_ROOT` / `./prepare_cmake.sh
+--bdut-root-dir`). To configure, build, and test:
 
 ```bash
 ./prepare_cmake.sh -m
@@ -120,6 +121,7 @@ When adding or changing behaviour, update as appropriate:
 - [README.md](./README.md) — overview, building, API summary;
 - [vcpkg/README.md](./vcpkg/README.md) — overlay port install and maintainer notes;
 - [CHANGES.md](./CHANGES.md) — release notes (not the backlog);
+- [NEWS.md](./NEWS.md) — release chronology;
 - [TODO.md](./TODO.md) — planned work and deferrals;
 - [ABI.md](./ABI.md) — layout and ABI stability;
 

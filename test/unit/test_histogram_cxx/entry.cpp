@@ -2,6 +2,11 @@
  * @file test/unit/test_histogram_cxx/entry.cpp
  * @brief Unit tests for the p99 C++ histogram wrapper.
  *
+ * Home: https://github.com/synesissoftware/p99
+ *
+ * Created: 4th July 2026
+ * Updated: 4th August 2026
+ *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
  * @license BSD-3-Clause
@@ -9,22 +14,19 @@
 
 #include <p99/p99.hpp>
 
+#include <bdut/bdut.h>
+
 #include <chrono>
 #include <cstdio>
-#include <cstdlib>
 #include <exception>
 
-/* --- Test harness ----------------------------------------------------- */
-
-static int g_tests_run    = 0;
-static int g_tests_failed = 0;
+/* --- Test harness (BDUT shims) ---------------------------------------- */
 
 #define TEST(fn)                                                            \
                                                                             \
     static void fn();                                                       \
     static void run_##fn()                                                  \
     {                                                                       \
-        ++g_tests_run;                                                      \
         printf("  %s ... ", #fn);                                           \
         fflush(stdout);                                                     \
         fn();                                                               \
@@ -32,24 +34,7 @@ static int g_tests_failed = 0;
     }                                                                       \
     static void fn()
 
-#define ASSERT(cond)                                                        \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        if (!(cond))                                                        \
-        {                                                                   \
-            fprintf(                                                        \
-                stderr                                                      \
-            ,   "\n  %s:%d: ASSERTION FAILED: %s\n"                         \
-            ,   __FILE__                                                    \
-            ,   __LINE__                                                    \
-            ,   #cond                                                       \
-            );                                                              \
-            ++g_tests_failed;                                               \
-                                                                            \
-            return;                                                         \
-        }                                                                   \
-    } while (0)
+#define ASSERT(cond)                                        BDUT_ASSERT_TRUE(cond)
 
 /* --- Tests ------------------------------------------------------------ */
 
@@ -164,7 +149,7 @@ TEST(test_cpp_histogram_struct_size)
 
 /* --- Main ------------------------------------------------------------- */
 
-int main()
+int main(int argc, char** argv)
 {
     printf("p99 C++ histogram tests\n");
 
@@ -181,16 +166,5 @@ int main()
     run_test_cpp_histogram_clear();
     run_test_cpp_histogram_struct_size();
 
-    printf("\n%d tests run", g_tests_run);
-
-    if (g_tests_failed > 0)
-    {
-        printf(", %d failed\n", g_tests_failed);
-
-        return EXIT_FAILURE;
-    }
-
-    printf(", all passed\n");
-
-    return EXIT_SUCCESS;
+    return BDUT_TESTS_PASSED(argc, argv);
 }
