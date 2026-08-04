@@ -3,7 +3,9 @@
 
 ## 0.2.1 - 4th August 2026
 
-* bundled **BDUT** 0.4.1 under **include/bundled-software/bdut/** and converted C/C++ unit tests to use it (with optional `BDUT_ROOT` / `find_package(BDUT)` override);
+* bundled **BDUT** 0.4.1 under **include/bundled-software/bdut/** and wired C/C++ unit tests to it via assertion-macro shims (optional `BDUT_ROOT` / `find_package(BDUT)` override);
+* **prepare_cmake.sh** — `--bdut-root-dir` for selecting an external **BDUT** tree;
+* **README.md** — development dependency note for **BDUT**;
 
 
 ## 0.2.0 - 4th August 2026

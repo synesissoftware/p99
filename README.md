@@ -454,7 +454,8 @@ standards, and release policy.
 
 The C struct layout and linking rules are documented in [ABI.md](./ABI.md).
 Before **1.0**, the layout may still change between **0.x** releases; each
-release updates **ABI.md** and **CHANGES.md**.
+release updates **ABI.md** and **CHANGES.md**. See [NEWS.md](./NEWS.md) for
+release chronology.
 
 
 ### Dependencies
