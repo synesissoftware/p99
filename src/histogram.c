@@ -81,6 +81,76 @@ try_add_ns_to_total_and_update_minmax_(
     return P99_TRUE;
 }
 
+static void
+value_at_target_rank_in_bucket_(
+    p99_histogram_t const* histogram
+,   size_t                 bucket_index
+,   uint64_t               count
+,   uint64_t               prev_accumulated
+,   uint64_t               target_rank
+,   uint64_t*              value
+)
+{
+    uint64_t lower;
+    uint64_t upper;
+    uint64_t interpolated;
+
+    if (!p99_histogram_bucket_range_(
+            bucket_index
+        ,   &lower
+        ,   &upper
+        ))
+    {
+        lower = 0;
+        upper = UINT64_MAX;
+    }
+
+    if (target_rank <= prev_accumulated)
+    {
+        interpolated = lower;
+    }
+    else
+    {
+        uint64_t target_offset = target_rank - prev_accumulated;
+        uint64_t range_width;
+
+        if ((P99_BUCKET_COUNT - 1) == bucket_index)
+        {
+            range_width = UINT64_MAX - lower;
+        }
+        else
+        {
+            range_width = upper - lower;
+        }
+
+        if (range_width <= UINT64_MAX / target_offset)
+        {
+            interpolated = lower + (range_width * target_offset) / count;
+        }
+        else
+        {
+            interpolated = p99_u64_add_mul_div_u64_(
+                lower
+            ,   range_width
+            ,   target_offset
+            ,   count
+            );
+        }
+    }
+
+    if (interpolated < histogram->min_event_time)
+    {
+        interpolated = histogram->min_event_time;
+    }
+
+    if (interpolated > histogram->max_event_time)
+    {
+        interpolated = histogram->max_event_time;
+    }
+
+    *value = interpolated;
+}
+
 static p99_truthy_t
 value_at_target_rank(
     p99_histogram_t const* histogram
@@ -103,68 +173,19 @@ value_at_target_rank(
         if (count > 0)
         {
             uint64_t prev_accumulated = accumulated;
-            uint64_t lower;
-            uint64_t upper;
-            uint64_t interpolated;
 
             accumulated += count;
 
             if (accumulated >= target_rank)
             {
-                if (!p99_histogram_bucket_range_(
-                        i
-                    ,   &lower
-                    ,   &upper
-                    ))
-                {
-                    lower = 0;
-                    upper = UINT64_MAX;
-                }
-
-                if (target_rank <= prev_accumulated)
-                {
-                    interpolated = lower;
-                }
-                else
-                {
-                    uint64_t target_offset = target_rank - prev_accumulated;
-                    uint64_t range_width;
-
-                    if ((P99_BUCKET_COUNT - 1) == i)
-                    {
-                        range_width = UINT64_MAX - lower;
-                    }
-                    else
-                    {
-                        range_width = upper - lower;
-                    }
-
-                    if (range_width <= UINT64_MAX / target_offset)
-                    {
-                        interpolated = lower + (range_width * target_offset) / count;
-                    }
-                    else
-                    {
-                        interpolated = p99_u64_add_mul_div_u64_(
-                            lower
-                        ,   range_width
-                        ,   target_offset
-                        ,   count
-                        );
-                    }
-                }
-
-                if (interpolated < histogram->min_event_time)
-                {
-                    interpolated = histogram->min_event_time;
-                }
-
-                if (interpolated > histogram->max_event_time)
-                {
-                    interpolated = histogram->max_event_time;
-                }
-
-                *value = interpolated;
+                value_at_target_rank_in_bucket_(
+                    histogram
+                ,   i
+                ,   count
+                ,   prev_accumulated
+                ,   target_rank
+                ,   value
+                );
 
                 return P99_TRUE;
             }
@@ -177,7 +198,7 @@ value_at_target_rank(
 }
 
 static double
-clamp_percentile(double percentile)
+clamp_percentile_(double percentile)
 {
     if (percentile < 0.0)
     {
@@ -189,6 +210,62 @@ clamp_percentile(double percentile)
     }
 
     return percentile;
+}
+
+static void
+value_at_percentile_in_bucket_(
+    p99_histogram_t const* histogram
+,   size_t                 bucket_index
+,   uint64_t               count
+,   uint64_t               prev_accumulated
+,   double                 target_rank
+,   uint64_t*              value
+)
+{
+    uint64_t lower;
+    uint64_t upper;
+    double   range_width;
+    double   target_offset;
+    double   fraction;
+    double   interpolated;
+    uint64_t result;
+
+    if (!p99_histogram_bucket_range_(
+            bucket_index
+        ,   &lower
+        ,   &upper
+        ))
+    {
+        lower = 0;
+        upper = UINT64_MAX;
+    }
+
+    target_offset = target_rank - (double)prev_accumulated;
+
+    if ((P99_BUCKET_COUNT - 1) == bucket_index)
+    {
+        range_width = (double)(UINT64_MAX - lower);
+    }
+    else
+    {
+        range_width = (double)(upper - lower);
+    }
+
+    fraction     = target_offset / (double)count;
+    interpolated = (double)lower + (range_width * fraction);
+    result       = (uint64_t)llround(interpolated);
+
+    if (result < histogram->min_event_time)
+    {
+        result = histogram->min_event_time;
+    }
+
+    if (result > histogram->max_event_time)
+    {
+        result = histogram->max_event_time;
+    }
+
+    *value = result;
 }
 
 /* --- Lifecycle -------------------------------------------------------- */
@@ -407,7 +484,7 @@ p99_histogram_value_at_percentile(
         return P99_FALSE;
     }
 
-    p = clamp_percentile(percentile);
+    p = clamp_percentile_(percentile);
 
     if (p <= 0.0)
     {
@@ -434,54 +511,19 @@ p99_histogram_value_at_percentile(
         if (count > 0)
         {
             uint64_t prev_accumulated = accumulated;
-            uint64_t lower;
-            uint64_t upper;
-            double   range_width;
-            double   target_offset;
-            double   fraction;
-            double   interpolated;
-            uint64_t result;
 
             accumulated += count;
 
             if ((double)accumulated >= target_rank)
             {
-                if (!p99_histogram_bucket_range_(
-                        i
-                    ,   &lower
-                    ,   &upper
-                    ))
-                {
-                    lower = 0;
-                    upper = UINT64_MAX;
-                }
-
-                target_offset = target_rank - (double)prev_accumulated;
-
-                if ((P99_BUCKET_COUNT - 1) == i)
-                {
-                    range_width = (double)(UINT64_MAX - lower);
-                }
-                else
-                {
-                    range_width = (double)(upper - lower);
-                }
-
-                fraction     = target_offset / (double)count;
-                interpolated = (double)lower + (range_width * fraction);
-                result       = (uint64_t)llround(interpolated);
-
-                if (result < histogram->min_event_time)
-                {
-                    result = histogram->min_event_time;
-                }
-
-                if (result > histogram->max_event_time)
-                {
-                    result = histogram->max_event_time;
-                }
-
-                *value = result;
+                value_at_percentile_in_bucket_(
+                    histogram
+                ,   i
+                ,   count
+                ,   prev_accumulated
+                ,   target_rank
+                ,   value
+                );
 
                 return P99_TRUE;
             }
@@ -682,6 +724,265 @@ p99_histogram_value_at_p99_999_9(
     ,   target_rank
     ,   value
     );
+}
+
+P99_CALL(p99_truthy_t)
+p99_histogram_values_at_percentiles(
+    p99_histogram_t const* histogram
+,   size_t length
+,   p99_pr_fp_result_t* elements
+)
+{
+    size_t          next_element;
+    uint64_t        accumulated;
+    double          last_target_rank;
+    uint64_t        last_value;
+    p99_truthy_t    has_last;
+
+    if (0 == histogram->event_count)
+    {
+        return P99_FALSE;
+    }
+
+    if (0 == length)
+    {
+        return P99_TRUE;
+    }
+
+    next_element     = 0;
+    accumulated      = 0;
+    has_last         = P99_FALSE;
+    last_target_rank = -1.0;
+    last_value       = histogram->min_event_time;
+
+    for (; next_element < length; ++next_element)
+    {
+        double const p = clamp_percentile_(elements[next_element].level);
+
+        if (p > 0.0)
+        {
+            break;
+        }
+
+        elements[next_element].value = histogram->min_event_time;
+        last_value                   = elements[next_element].value;
+        last_target_rank             = 0.0;
+        has_last                     = P99_TRUE;
+    }
+
+    { size_t i; for (i = 0; i < P99_BUCKET_COUNT && next_element < length; ++i)
+    {
+        uint64_t count = p99_hist_bucket_at_(histogram, i);
+
+        if (count > 0)
+        {
+            uint64_t prev_accumulated = accumulated;
+
+            accumulated += count;
+
+            for (;; ++next_element)
+            {
+                double p;
+                double target_rank;
+
+                if (next_element >= length)
+                {
+                    break;
+                }
+
+                p = clamp_percentile_(elements[next_element].level);
+
+                if (p <= 0.0)
+                {
+                    continue;
+                }
+
+                if (p >= 100.0)
+                {
+                    target_rank = (double)histogram->event_count;
+                }
+                else
+                {
+                    target_rank = (double)histogram->event_count * (p / 100.0);
+                }
+
+                if (has_last && target_rank <= last_target_rank)
+                {
+                    elements[next_element].value = last_value;
+
+                    continue;
+                }
+
+                if ((double)accumulated < target_rank)
+                {
+                    break;
+                }
+
+                if (p >= 100.0)
+                {
+                    elements[next_element].value = histogram->max_event_time;
+                }
+                else
+                {
+                    value_at_percentile_in_bucket_(
+                        histogram
+                    ,   i
+                    ,   count
+                    ,   prev_accumulated
+                    ,   target_rank
+                    ,   &elements[next_element].value
+                    );
+                }
+
+                last_value       = elements[next_element].value;
+                last_target_rank = target_rank;
+                has_last         = P99_TRUE;
+            }
+        }
+    }}
+
+    for (; next_element < length; ++next_element)
+    {
+        double p;
+        double target_rank;
+
+        p = clamp_percentile_(elements[next_element].level);
+
+        if (p <= 0.0)
+        {
+            elements[next_element].value = histogram->min_event_time;
+        }
+        else if (has_last)
+        {
+            if (p >= 100.0)
+            {
+                target_rank = (double)histogram->event_count;
+            }
+            else
+            {
+                target_rank = (double)histogram->event_count * (p / 100.0);
+            }
+
+            if (target_rank <= last_target_rank)
+            {
+                elements[next_element].value = last_value;
+            }
+            else
+            {
+                elements[next_element].value = histogram->max_event_time;
+            }
+        }
+        else if (p >= 100.0)
+        {
+            elements[next_element].value = histogram->max_event_time;
+        }
+        else
+        {
+            elements[next_element].value = histogram->max_event_time;
+        }
+
+        last_value = elements[next_element].value;
+
+        if (p <= 0.0)
+        {
+            last_target_rank = 0.0;
+        }
+        else if (p >= 100.0)
+        {
+            last_target_rank = (double)histogram->event_count;
+        }
+        else
+        {
+            last_target_rank = (double)histogram->event_count * (p / 100.0);
+        }
+
+        has_last = P99_TRUE;
+    }
+
+    return P99_TRUE;
+}
+
+P99_CALL(p99_truthy_t)
+p99_histogram_values_at_fixed_percentiles(
+    p99_histogram_t const* histogram
+,   p99_pr_fixed_results_t* results
+)
+{
+    static uint64_t const numerators[10] = {
+        1
+    ,   3
+    ,   90
+    ,   95
+    ,   99
+    ,   995
+    ,   999
+    ,   9999
+    ,   99999
+    ,   999999
+    };
+
+    static uint64_t const denominators[10] = {
+        2
+    ,   4
+    ,   100
+    ,   100
+    ,   100
+    ,   1000
+    ,   1000
+    ,   10000
+    ,   100000
+    ,   1000000
+    };
+
+    uint64_t target_ranks[10];
+    uint64_t accumulated = 0;
+    size_t   next_rank   = 0;
+
+
+    if (0 == histogram->event_count)
+    {
+        return P99_FALSE;
+    }
+
+    { size_t i; for (i = 0; 10 != i; ++i)
+    {
+        target_ranks[i] = p99_u64_mul_div_u64_(
+            histogram->event_count
+        ,   numerators[i]
+        ,   denominators[i]
+        );
+    }}
+
+    { size_t i; for (i = 0; i < P99_BUCKET_COUNT && 10 != next_rank; ++i)
+    {
+        uint64_t count = p99_hist_bucket_at_(histogram, i);
+
+        if (count > 0)
+        {
+            uint64_t prev_accumulated = accumulated;
+
+            accumulated += count;
+
+            for (; 10 != next_rank && accumulated >= target_ranks[next_rank]; ++next_rank)
+            {
+                value_at_target_rank_in_bucket_(
+                    histogram
+                ,   i
+                ,   count
+                ,   prev_accumulated
+                ,   target_ranks[next_rank]
+                ,   &results->values[next_rank]
+                );
+            }
+        }
+    }}
+
+    for (; 10 != next_rank; ++next_rank)
+    {
+        results->values[next_rank] = histogram->max_event_time;
+    }
+
+    return P99_TRUE;
 }
 
 /* --- Utilities -------------------------------------------------------- */
