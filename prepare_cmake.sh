@@ -15,6 +15,7 @@ fi
 MakeCmd=${SIS_CMAKE_MAKE_COMMAND:-${SIS_CMAKE_COMMAND:-$DefaultMakeCmd}}
 
 Configuration=Release
+BDUTDirGiven=
 BenchmarksDisabled=0
 CompactHistogram=0
 DocsEnabled=0
@@ -32,6 +33,11 @@ VerboseMakefile=0
 while [[ $# -gt 0 ]]; do
 
   case $1 in
+    --bdut-root-dir)
+
+      shift
+      BDUTDirGiven=$1
+      ;;
     --cmake-verbose-makefile|-v)
 
       VerboseMakefile=1
@@ -83,6 +89,11 @@ $ScriptPath [ ... flags/options ... ]
 Flags/options:
 
     behaviour:
+
+    --bdut-root-dir <dir>
+        specifies the BDUT root-directory, which will be passed to CMake
+        as the variable BDUT_ROOT, from which the BDUT library will be used,
+        rather than using the bundled version
 
     -v
     --cmake-verbose-makefile
@@ -158,6 +169,7 @@ cd $CMakeDir
 
 echo "Executing CMake (in ${CMakeDir})"
 
+if [ -z "$BDUTDirGiven" ]; then CMakeBDUTVariable="" ; else CMakeBDUTVariable="-DBDUT_ROOT=$BDUTDirGiven/" ; fi
 if [ $BenchmarksDisabled -eq 0 ]; then CMakeBuildBenchmarksFlag="ON" ; else CMakeBuildBenchmarksFlag="OFF" ; fi
 if [ $CompactHistogram -eq 0 ]; then CMakeCompactHistogramFlag="OFF" ; else CMakeCompactHistogramFlag="ON" ; fi
 if [ $DocsEnabled -eq 0 ]; then CMakeBuildDocsFlag="OFF" ; else CMakeBuildDocsFlag="ON" ; fi
@@ -169,6 +181,7 @@ if [ $VerboseMakefile -eq 0 ]; then CMakeVerboseMakefileFlag="OFF" ; else CMakeV
 if [ $MinGW -ne 0 ]; then
 
   cmake \
+    $CMakeBDUTVariable \
     -DP99_BUILD_BENCHMARKS:BOOL=$CMakeBuildBenchmarksFlag \
     -DP99_BUILD_DOCS:BOOL=$CMakeBuildDocsFlag \
     -DP99_BUILD_EXAMPLES:BOOL=$CMakeBuildExamplesFlag \
@@ -182,6 +195,7 @@ if [ $MinGW -ne 0 ]; then
 else
 
   cmake \
+    $CMakeBDUTVariable \
     -DP99_BUILD_BENCHMARKS:BOOL=$CMakeBuildBenchmarksFlag \
     -DP99_BUILD_DOCS:BOOL=$CMakeBuildDocsFlag \
     -DP99_BUILD_EXAMPLES:BOOL=$CMakeBuildExamplesFlag \

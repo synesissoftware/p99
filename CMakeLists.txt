@@ -4,7 +4,7 @@
 # Purpose:  Top-level CMake lists file for p99
 #
 # Created:  4th July 2026
-# Updated:  6th July 2026
+# Updated:  4th August 2026
 #
 # Home:     https://github.com/synesissoftware/p99
 #
@@ -13,9 +13,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(p99
-    DESCRIPTION "Low-cost generation of performance percentiles (p50, p90, p99, etc.)"
-    HOMEPAGE_URL "https://github.com/synesissoftware/p99"
-    LANGUAGES C
+	DESCRIPTION "Low-cost generation of performance percentiles (p50, p90, p99, etc.)"
+	HOMEPAGE_URL "https://github.com/synesissoftware/p99"
+	LANGUAGES C
 )
 
 string(TOLOWER ${PROJECT_NAME} PROJECT_NAME_LOWER)
@@ -25,22 +25,22 @@ string(TOUPPER ${PROJECT_NAME} PROJECT_NAME_UPPER)
 set(RX_PROJ_TAG "${PROJECT_NAME_UPPER}")
 set(RX_WS "[ \t]")
 file(READ
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME_LOWER}/${PROJECT_NAME_LOWER}.h"
-    _p99_header
+	"${CMAKE_CURRENT_SOURCE_DIR}/include/${PROJECT_NAME_LOWER}/${PROJECT_NAME_LOWER}.h"
+	_p99_header
 )
 string(REGEX MATCH
-    "#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_MAJOR${RX_WS}+([0-9]+)"
-    _p99_ver_major_dummy ${_p99_header}
+	"#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_MAJOR${RX_WS}+([0-9]+)"
+	_p99_ver_major_dummy ${_p99_header}
 )
 set(_P99_VERSION_MAJOR ${CMAKE_MATCH_1})
 string(REGEX MATCH
-    "#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_MINOR${RX_WS}+([0-9]+)"
-    _p99_ver_minor_dummy ${_p99_header}
+	"#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_MINOR${RX_WS}+([0-9]+)"
+	_p99_ver_minor_dummy ${_p99_header}
 )
 set(_P99_VERSION_MINOR ${CMAKE_MATCH_1})
 string(REGEX MATCH
-    "#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_(PATCH|REVISION)${RX_WS}+([0-9]+)"
-    _p99_ver_patch_dummy ${_p99_header}
+	"#${RX_WS}*define${RX_WS}+${RX_PROJ_TAG}_VER_(PATCH|REVISION)${RX_WS}+([0-9]+)"
+	_p99_ver_patch_dummy ${_p99_header}
 )
 set(_P99_VERSION_PATCH ${CMAKE_MATCH_2})
 
@@ -48,7 +48,7 @@ set(PROJECT_VERSION_MAJOR ${_P99_VERSION_MAJOR})
 set(PROJECT_VERSION_MINOR ${_P99_VERSION_MINOR})
 set(PROJECT_VERSION_PATCH ${_P99_VERSION_PATCH})
 set(PROJECT_VERSION
-    "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
+	"${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}"
 )
 
 message(STATUS "Configuring ${PROJECT_NAME} ${PROJECT_VERSION}")
@@ -70,224 +70,306 @@ option(P99_COMPACT_HISTOGRAM "Use compact histogram layout (<=512 bytes)" OFF)
 option(MSVC_USE_MT "Use static MSVC runtime (/MT)" OFF)
 
 if(MSVC)
-    if(MSVC_USE_MT)
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
+
+	if(MSVC_USE_MT)
+
+		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	endif()
 else()
-    if(MSVC_USE_MT)
-        # Present so prepare_cmake.sh can pass -DMSVC_USE_MT without unused-
-        # variable warnings on non-MSVC toolchains.
-    endif()
+
+	if(MSVC_USE_MT)
+
+		# Present so prepare_cmake.sh can pass -DMSVC_USE_MT without unused-
+		# variable warnings on non-MSVC toolchains.
+	endif()
 endif()
 
 if(NOT P99_BUILD_SHARED AND NOT P99_BUILD_STATIC)
-    message(FATAL_ERROR "At least one of P99_BUILD_SHARED or P99_BUILD_STATIC must be ON")
+
+	message(FATAL_ERROR "At least one of P99_BUILD_SHARED or P99_BUILD_STATIC must be ON")
 endif()
 
 if(WIN32)
-    enable_language(RC)
+
+	enable_language(RC)
 endif()
 
 # --- Library ---------------------------------------------------------------
 
 set(P99_SOURCES src/histogram.c)
 set(P99_HEADERS
-    include/p99/p99.h
-    include/p99/p99.hpp
+	include/p99/p99.h
+	include/p99/p99.hpp
 )
 
 set(P99_COMPILE_OPTIONS
-    $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
-    $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>
-    $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
-    $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>
+	$<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
+	$<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>
+	$<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
+	$<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>
 )
 
 set(P99_CXX_COMPILE_OPTIONS
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>
+	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wall>
+	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Werror>
+	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wextra>
+	$<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-Wpedantic>
 )
 
 set(P99_LIBRARY_COMPILE_OPTIONS
-    ${P99_COMPILE_OPTIONS}
-    $<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-fvisibility=hidden>
+	${P99_COMPILE_OPTIONS}
+	$<$<C_COMPILER_ID:GNU,Clang,AppleClang>:-fvisibility=hidden>
 )
 
 function(p99_configure_library target)
-    target_include_directories(${target}
-        PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-        PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}/src
-    )
-    target_compile_options(${target} PRIVATE ${P99_LIBRARY_COMPILE_OPTIONS})
-    if(UNIX)
-        target_link_libraries(${target} PRIVATE m)
-    endif()
-    if(P99_COMPACT_HISTOGRAM)
-        target_compile_definitions(${target} PUBLIC P99_COMPACT_HISTOGRAM)
-    endif()
-    set_target_properties(${target} PROPERTIES
-        C_STANDARD 11
-        C_STANDARD_REQUIRED ON
-        C_EXTENSIONS OFF
-        POSITION_INDEPENDENT_CODE ON
-        VERSION ${PROJECT_VERSION}
-        SOVERSION ${PROJECT_VERSION_MAJOR}
-    )
+
+	target_include_directories(${target}
+		PUBLIC
+			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+			$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+		PRIVATE
+			${CMAKE_CURRENT_SOURCE_DIR}/src
+	)
+	target_compile_options(${target} PRIVATE ${P99_LIBRARY_COMPILE_OPTIONS})
+	if(UNIX)
+
+		target_link_libraries(${target} PRIVATE m)
+	endif()
+	if(P99_COMPACT_HISTOGRAM)
+
+		target_compile_definitions(${target} PUBLIC P99_COMPACT_HISTOGRAM)
+	endif()
+	set_target_properties(${target} PROPERTIES
+		C_STANDARD 11
+		C_STANDARD_REQUIRED ON
+		C_EXTENSIONS OFF
+		POSITION_INDEPENDENT_CODE ON
+		VERSION ${PROJECT_VERSION}
+		SOVERSION ${PROJECT_VERSION_MAJOR}
+	)
 endfunction()
 
 # In-tree executables: on Windows prefer the static library so tests and
 # tools do not depend on locating p99.dll at runtime. A missing DLL on
 # headless CI shows a modal dialog and never reaches main().
 function(p99_link_consumer target)
-    if(WIN32 AND P99_BUILD_STATIC)
-        target_link_libraries(${target} PRIVATE p99_static)
-    else()
-        target_link_libraries(${target} PRIVATE p99::p99)
-        if(WIN32 AND P99_BUILD_SHARED)
-            add_custom_command(TARGET ${target} POST_BUILD
-                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                    "$<TARGET_FILE:p99_shared>"
-                    "$<TARGET_FILE_DIR:${target}>"
-                COMMENT "Copy p99.dll next to ${target}"
-            )
-        endif()
-    endif()
-    if(UNIX)
-        target_link_libraries(${target} PRIVATE m)
-    endif()
+
+	if(WIN32 AND P99_BUILD_STATIC)
+
+		target_link_libraries(${target} PRIVATE p99_static)
+	else()
+
+		target_link_libraries(${target} PRIVATE p99::p99)
+		if(WIN32 AND P99_BUILD_SHARED)
+
+			add_custom_command(TARGET ${target} POST_BUILD
+				COMMAND ${CMAKE_COMMAND} -E copy_if_different
+					"$<TARGET_FILE:p99_shared>"
+					"$<TARGET_FILE_DIR:${target}>"
+				COMMENT "Copy p99.dll next to ${target}"
+			)
+		endif()
+	endif()
+	if(UNIX)
+
+		target_link_libraries(${target} PRIVATE m)
+	endif()
 endfunction()
 
 function(p99_configure_cxx_consumer target)
-    p99_link_consumer(${target})
-    target_compile_options(${target} PRIVATE ${P99_CXX_COMPILE_OPTIONS})
-    if(MSVC AND MSVC_VERSION VERSION_GREATER_EQUAL 1914)
-        target_compile_options(${target} PRIVATE /Zc:__cplusplus)
-    endif()
-    set_target_properties(${target} PROPERTIES
-        CXX_STANDARD 20
-        CXX_STANDARD_REQUIRED ON
-        CXX_EXTENSIONS OFF
-    )
+
+	p99_link_consumer(${target})
+	target_compile_options(${target} PRIVATE ${P99_CXX_COMPILE_OPTIONS})
+	if(MSVC AND MSVC_VERSION VERSION_GREATER_EQUAL 1914)
+
+		target_compile_options(${target} PRIVATE /Zc:__cplusplus)
+	endif()
+	set_target_properties(${target} PROPERTIES
+		CXX_STANDARD 20
+		CXX_STANDARD_REQUIRED ON
+		CXX_EXTENSIONS OFF
+	)
 endfunction()
 
 if(P99_BUILD_SHARED)
-    add_library(p99_shared SHARED ${P99_SOURCES})
-    add_library(p99::p99 ALIAS p99_shared)
-    p99_configure_library(p99_shared)
-    set_target_properties(p99_shared PROPERTIES OUTPUT_NAME p99)
-    target_compile_definitions(p99_shared PRIVATE P99_SHARED_BUILD)
-    if(WIN32)
-        target_sources(p99_shared PRIVATE
-            "${CMAKE_CURRENT_SOURCE_DIR}/p99.def"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/dllmain.c"
-            "${CMAKE_CURRENT_SOURCE_DIR}/src/p99.rc"
-        )
-    endif()
+
+	add_library(p99_shared SHARED ${P99_SOURCES})
+	add_library(p99::p99 ALIAS p99_shared)
+	p99_configure_library(p99_shared)
+	set_target_properties(p99_shared PROPERTIES OUTPUT_NAME p99)
+	target_compile_definitions(p99_shared PRIVATE P99_SHARED_BUILD)
+	if(WIN32)
+
+		target_sources(p99_shared PRIVATE
+			"${CMAKE_CURRENT_SOURCE_DIR}/p99.def"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/dllmain.c"
+			"${CMAKE_CURRENT_SOURCE_DIR}/src/p99.rc"
+		)
+	endif()
 endif()
 
 if(P99_BUILD_STATIC)
-    add_library(p99_static STATIC ${P99_SOURCES})
-    p99_configure_library(p99_static)
-    set_target_properties(p99_static PROPERTIES OUTPUT_NAME p99)
-    target_compile_definitions(p99_static PUBLIC P99_STATIC)
-    if(NOT P99_BUILD_SHARED)
-        add_library(p99::p99 ALIAS p99_static)
-    endif()
+
+	add_library(p99_static STATIC ${P99_SOURCES})
+	p99_configure_library(p99_static)
+	set_target_properties(p99_static PROPERTIES OUTPUT_NAME p99)
+	target_compile_definitions(p99_static PUBLIC P99_STATIC)
+	if(NOT P99_BUILD_SHARED)
+
+		add_library(p99::p99 ALIAS p99_static)
+	endif()
 endif()
 
 # --- Tests -----------------------------------------------------------------
 
 if(P99_BUILD_TESTS)
-    enable_testing()
 
-    add_executable(p99_test test/unit/test_histogram/entry.c)
-    p99_link_consumer(p99_test)
-    target_compile_options(p99_test PRIVATE ${P99_COMPILE_OPTIONS})
-    set_target_properties(p99_test PROPERTIES
-        C_STANDARD 11
-        C_STANDARD_REQUIRED ON
-        C_EXTENSIONS OFF
-    )
-    add_test(NAME histogram COMMAND p99_test)
-    set_tests_properties(histogram PROPERTIES TIMEOUT 120)
+	enable_testing()
 
-    enable_language(CXX)
+	# BDUT (Brain-Dead Unit-Testing) — test-only dependency.
+	#
+	# By default, p99 uses the bundled header under
+	# include/bundled-software/bdut/. Alternatively:
+	#
+	# * BDUT_ROOT (CMake or environment) — use that tree's include/;
+	# * find_package(BDUT) — use an installed BDUT::BDUT package;
+	# * otherwise — bundled include/bundled-software.
+	#
+	# Unlike a global include_directories(), BDUT is attached only to test
+	# targets so the shipped library is unaffected.
 
-    add_executable(p99_test_cxx test/unit/test_histogram_cxx/entry.cpp)
-    p99_configure_cxx_consumer(p99_test_cxx)
-    add_test(NAME histogram_cpp COMMAND p99_test_cxx)
-    set_tests_properties(histogram_cpp PROPERTIES TIMEOUT 120)
+	set(P99_BDUT_PACKAGE_FOUND FALSE)
+	unset(P99_BDUT_INCLUDE_DIR)
+
+	if(DEFINED BDUT_ROOT OR DEFINED ENV{BDUT_ROOT})
+
+		if(DEFINED BDUT_ROOT)
+
+			message(STATUS "BDUT_ROOT provided as CMake variable with value ${BDUT_ROOT}")
+			set(P99_BDUT_INCLUDE_DIR "${BDUT_ROOT}/include")
+		else()
+
+			message(STATUS "BDUT_ROOT provided as environment variable with value $ENV{BDUT_ROOT}")
+			set(P99_BDUT_INCLUDE_DIR "$ENV{BDUT_ROOT}/include")
+		endif()
+	else()
+
+		find_package(BDUT QUIET)
+
+		if(BDUT_FOUND)
+
+			message(STATUS "CMake package BDUT found (version ${BDUT_VERSION})")
+			set(P99_BDUT_PACKAGE_FOUND TRUE)
+		else()
+
+			message(STATUS "CMake package BDUT not found; using bundled version")
+			set(P99_BDUT_INCLUDE_DIR
+				"${CMAKE_CURRENT_SOURCE_DIR}/include/bundled-software"
+			)
+		endif()
+	endif()
+
+	function(p99_link_bdut target)
+
+		if(P99_BDUT_PACKAGE_FOUND)
+
+			target_link_libraries(${target} PRIVATE BDUT::BDUT)
+		else()
+
+			target_include_directories(${target} PRIVATE ${P99_BDUT_INCLUDE_DIR})
+		endif()
+	endfunction()
+
+	add_executable(p99_test test/unit/test_histogram/entry.c)
+	p99_link_consumer(p99_test)
+	p99_link_bdut(p99_test)
+	target_compile_options(p99_test PRIVATE ${P99_COMPILE_OPTIONS})
+	set_target_properties(p99_test PROPERTIES
+		C_STANDARD 11
+		C_STANDARD_REQUIRED ON
+		C_EXTENSIONS OFF
+	)
+	add_test(NAME histogram COMMAND p99_test)
+	set_tests_properties(histogram PROPERTIES TIMEOUT 120)
+
+	enable_language(CXX)
+
+	add_executable(p99_test_cxx test/unit/test_histogram_cxx/entry.cpp)
+	p99_configure_cxx_consumer(p99_test_cxx)
+	p99_link_bdut(p99_test_cxx)
+	add_test(NAME histogram_cpp COMMAND p99_test_cxx)
+	set_tests_properties(histogram_cpp PROPERTIES TIMEOUT 120)
 endif()
 
 # --- Examples --------------------------------------------------------------
 
 if(P99_BUILD_EXAMPLES)
-    add_executable(build_histogram examples/build_histogram.c)
-    p99_link_consumer(build_histogram)
-    target_compile_options(build_histogram PRIVATE ${P99_COMPILE_OPTIONS})
-    set_target_properties(build_histogram PROPERTIES
-        C_STANDARD 11
-        C_STANDARD_REQUIRED ON
-        C_EXTENSIONS OFF
-    )
 
-    enable_language(CXX)
+	add_executable(build_histogram examples/build_histogram.c)
+	p99_link_consumer(build_histogram)
+	target_compile_options(build_histogram PRIVATE ${P99_COMPILE_OPTIONS})
+	set_target_properties(build_histogram PROPERTIES
+		C_STANDARD 11
+		C_STANDARD_REQUIRED ON
+		C_EXTENSIONS OFF
+	)
 
-    add_executable(build_histogram_cxx examples/build_histogram_cxx.cpp)
-    p99_configure_cxx_consumer(build_histogram_cxx)
+	enable_language(CXX)
+
+	add_executable(build_histogram_cxx examples/build_histogram_cxx.cpp)
+	p99_configure_cxx_consumer(build_histogram_cxx)
 endif()
 
 # --- Benchmarks ------------------------------------------------------------
 
 if(P99_BUILD_BENCHMARKS)
-    add_executable(p99_benchmark benchmarks/benchmark_histogram.c)
-    p99_link_consumer(p99_benchmark)
-    target_compile_options(p99_benchmark PRIVATE ${P99_COMPILE_OPTIONS})
-    set_target_properties(p99_benchmark PROPERTIES
-        C_STANDARD 11
-        C_STANDARD_REQUIRED ON
-        C_EXTENSIONS OFF
-    )
+
+	add_executable(p99_benchmark benchmarks/benchmark_histogram.c)
+	p99_link_consumer(p99_benchmark)
+	target_compile_options(p99_benchmark PRIVATE ${P99_COMPILE_OPTIONS})
+	set_target_properties(p99_benchmark PROPERTIES
+		C_STANDARD 11
+		C_STANDARD_REQUIRED ON
+		C_EXTENSIONS OFF
+	)
 endif()
 
 # --- Documentation (Doxygen) ---------------------------------------------
 
 if(P99_BUILD_DOCS)
-    find_package(Doxygen REQUIRED)
 
-    set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/docs")
+	find_package(Doxygen REQUIRED)
 
-    configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
-        "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
-        @ONLY
-    )
+	set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/docs")
 
-    add_custom_target(p99_docs
-        COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_BINARY_DIR}/Doxyfile"
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMENT "Generating p99 API documentation (Doxygen)"
-        VERBATIM
-    )
+	configure_file(
+		"${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
+		"${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+		@ONLY
+	)
+
+	add_custom_target(p99_docs
+		COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_BINARY_DIR}/Doxyfile"
+		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+		COMMENT "Generating p99 API documentation (Doxygen)"
+		VERBATIM
+	)
 endif()
 
 # --- pkg-config ------------------------------------------------------------
 
 if(P99_COMPACT_HISTOGRAM)
-    set(P99_PC_CFLAGS "-I\${includedir} -DP99_COMPACT_HISTOGRAM")
+
+	set(P99_PC_CFLAGS "-I\${includedir} -DP99_COMPACT_HISTOGRAM")
 else()
-    set(P99_PC_CFLAGS "-I\${includedir}")
+
+	set(P99_PC_CFLAGS "-I\${includedir}")
 endif()
 
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/p99.pc.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/p99.pc"
-    @ONLY
+	"${CMAKE_CURRENT_SOURCE_DIR}/p99.pc.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/p99.pc"
+	@ONLY
 )
 
 # --- Install ---------------------------------------------------------------
@@ -295,58 +377,61 @@ configure_file(
 set(P99_INSTALL_TARGETS)
 
 if(P99_BUILD_SHARED)
-    list(APPEND P99_INSTALL_TARGETS p99_shared)
+
+	list(APPEND P99_INSTALL_TARGETS p99_shared)
 endif()
 
 if(P99_BUILD_STATIC)
-    list(APPEND P99_INSTALL_TARGETS p99_static)
+
+	list(APPEND P99_INSTALL_TARGETS p99_static)
 endif()
 
 install(TARGETS ${P99_INSTALL_TARGETS}
-    EXPORT p99Targets
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+	EXPORT p99Targets
+	ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 install(FILES ${P99_HEADERS}
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/p99
+	DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/p99
 )
 
 if(WIN32 AND P99_BUILD_SHARED)
-    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/p99.def"
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    )
+
+	install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/p99.def"
+		DESTINATION ${CMAKE_INSTALL_LIBDIR}
+	)
 endif()
 
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/p99.pc"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
 # --- CMake package config --------------------------------------------------
 
 install(EXPORT p99Targets
-    FILE p99Targets.cmake
-    NAMESPACE p99::
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/p99
+	FILE p99Targets.cmake
+	NAMESPACE p99::
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/p99
 )
 
 configure_package_config_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/p99Config.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/p99Config.cmake"
-    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/p99
+	"${CMAKE_CURRENT_SOURCE_DIR}/cmake/p99Config.cmake.in"
+	"${CMAKE_CURRENT_BINARY_DIR}/p99Config.cmake"
+	INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/p99
 )
 
 write_basic_package_version_file(
-    "${CMAKE_CURRENT_BINARY_DIR}/p99ConfigVersion.cmake"
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY SameMajorVersion
+	"${CMAKE_CURRENT_BINARY_DIR}/p99ConfigVersion.cmake"
+	VERSION ${PROJECT_VERSION}
+	COMPATIBILITY SameMajorVersion
 )
 
 install(FILES
-    "${CMAKE_CURRENT_BINARY_DIR}/p99Config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/p99ConfigVersion.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/p99
+	"${CMAKE_CURRENT_BINARY_DIR}/p99Config.cmake"
+	"${CMAKE_CURRENT_BINARY_DIR}/p99ConfigVersion.cmake"
+	DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/p99
 )
 
 # --- pkg-config variable for consumers -------------------------------------

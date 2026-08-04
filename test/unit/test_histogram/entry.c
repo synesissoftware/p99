@@ -14,23 +14,21 @@
 
 #include <p99/p99.h>
 
+#include <bdut/bdut.h>
+
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* --- Test harness ----------------------------------------------------- */
-
-static int g_tests_run    = 0;
-static int g_tests_failed = 0;
+/* --- Test harness (BDUT shims) ---------------------------------------- */
 
 #define TEST(fn)                                                            \
                                                                             \
     static void TEST_##fn(void);                                            \
     static void RUN_TEST_##fn(void)                                         \
     {                                                                       \
-        ++g_tests_run;                                                      \
         printf("  %s ... ", #fn);                                           \
         fflush(stdout);                                                     \
         TEST_##fn();                                                        \
@@ -38,141 +36,16 @@ static int g_tests_failed = 0;
     }                                                                       \
     static void TEST_##fn(void)
 
-#define ASSERT(expr, file, line, func)                                      \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        if (!(expr))                                                        \
-        {                                                                   \
-            fprintf(                                                        \
-                stderr                                                      \
-            ,   "\n  %s:%d:%s: ASSERTION FAILED: %s\n"                      \
-            ,   file                                                        \
-            ,   line                                                        \
-            ,   func                                                        \
-            ,   #expr                                                       \
-            );                                                              \
-            ++g_tests_failed;                                               \
-                                                                            \
-            return;                                                         \
-        }                                                                   \
-    } while (0)
+#define ASSERT_TRUE(cond)                                   BDUT_ASSERT_TRUE(cond)
+#define ASSERT_FALSE(cond)                                  BDUT_ASSERT_FALSE(cond)
+#define ASSERT_EQ_U64(expected, actual)                     BDUT_ASSERT_EQ((expected), (actual))
+#define ASSERT_EQ_SIZE(expected, actual)                    BDUT_ASSERT_EQ((expected), (actual))
+#define ASSERT_LE_SIZE(expected, actual)                    BDUT_ASSERT_LE((expected), (actual))
 
-#define ASSERT_TRUE(cond)                                   ASSERT(cond, __FILE__, __LINE__, __func__)
-#define ASSERT_FALSE(cond)                                  ASSERT(!(cond), __FILE__, __LINE__, __func__)
-
-#define ASSERT_SCALAR_CMP_U64_(expected, actual, comparand, failed_cond)    \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        uint64_t const _p99_expected = (uint64_t)(expected);                \
-        uint64_t const _p99_actual   = (uint64_t)(actual);                  \
-                                                                            \
-        if (failed_cond) \
-        { \
-            assert_scalar_cmp_u64(                                          \
-                _p99_expected                                               \
-            ,   _p99_actual                                                 \
-            ,   __FILE__, __LINE__, __func__                                \
-            ,   #expected                                                   \
-            ,   (comparand)                                                 \
-            ,   #actual                                                     \
-            );                                                              \
-                                                                            \
-            return;                                                         \
-        }                                                                   \
-    } while (0)
-
-#define ASSERT_EQ_U64(expected, actual)                                     \
-                                                                            \
-    ASSERT_SCALAR_CMP_U64_(                                                 \
-        (expected)                                                          \
-    ,   (actual)                                                            \
-    ,   "=="                                                                \
-    ,   _p99_expected != _p99_actual                                        \
-    )
-
-#define ASSERT_EQ_SIZE(expected, actual)                                    \
-                                                                            \
-    ASSERT_SCALAR_CMP_U64_(                                                 \
-        (expected)                                                          \
-    ,   (actual)                                                            \
-    ,   "=="                                                                \
-    ,   _p99_expected != _p99_actual                                        \
-    )
-
-#define ASSERT_LE_SIZE(expected, actual)                                    \
-                                                                            \
-    ASSERT_SCALAR_CMP_U64_(                                                 \
-        (expected)                                                          \
-    ,   (actual)                                                            \
-    ,   "<="                                                                \
-    ,   _p99_expected < _p99_actual                                         \
-    )
-
-#define ASSERT_SCALAR_EQ_APPROX_U64_(expected, actual, tolerance)           \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        uint64_t const _p99_expected = (uint64_t)(expected);                \
-        uint64_t const _p99_actual   = (uint64_t)(actual);                  \
-        double const   _p99_tolerance_fraction = (double)(tolerance);       \
-        double const   _p99_diff =                                          \
-            fabs((double)_p99_actual - (double)_p99_expected);              \
-        double const   _p99_tolerance =                                     \
-            fabs((double)_p99_expected * _p99_tolerance_fraction);          \
-                                                                            \
-        if (_p99_diff > _p99_tolerance && _p99_diff > 1.0)                  \
-        {                                                                   \
-            assert_scalar_eq_approx_u64(                                    \
-                _p99_expected                                               \
-            ,   _p99_actual                                                 \
-            ,   _p99_tolerance_fraction                                     \
-            ,   __FILE__                                                    \
-            ,   __LINE__                                                    \
-            ,   __func__                                                    \
-            ,   #expected                                                   \
-            ,   #actual                                                     \
-            );                                                              \
-                                                                            \
-            return;                                                         \
-        }                                                                   \
-    } while (0)
-
-#define ASSERT_EQ_APPROX_U64(expected, actual, tolerance)                   \
-                                                                            \
-    ASSERT_SCALAR_EQ_APPROX_U64_((expected), (actual), (tolerance))
+/* Approximate equality is not provided by BDUT. */
 
 static void
-assert_scalar_cmp_u64(
-    uint64_t expected
-,   uint64_t actual
-,   char const* file
-,   int line
-,   char const* func
-,   char const* expected_comparand_string
-,   char const* comparand_string
-,   char const* actual_comparand_string
-)
-{
-    fprintf(
-        stderr
-    ,   "\n  %s:%d:%s: ASSERTION FAILED: (%s) %s (%s)\n"
-            "    expected: %llu\n"
-            "    actual:   %llu\n"
-    ,   file, line, func
-    ,   expected_comparand_string
-    ,   comparand_string
-    ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
-    );
-
-    ++g_tests_failed;
-}
-
-static void
-assert_scalar_eq_approx_u64(
+assert_eq_approx_u64(
     uint64_t expected
 ,   uint64_t actual
 ,   double tolerance_fraction
@@ -183,26 +56,44 @@ assert_scalar_eq_approx_u64(
 ,   char const* actual_comparand_string
 )
 {
-    double tolerance = fabs((double)expected * tolerance_fraction);
+    double const diff = fabs((double)actual - (double)expected);
+    double const tolerance = fabs((double)expected * tolerance_fraction);
 
-    fprintf(
-        stderr
-    ,   "\n  %s:%d:%s: ASSERTION FAILED: (%s) ~= (%s)\n"
-            "    expected: %llu\n"
-            "    actual:   %llu\n"
-            "    tolerance: %g\n"
-    ,   file
-    ,   line
-    ,   func
-    ,   expected_comparand_string
-    ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
-    ,   tolerance
-    );
+    if (diff > tolerance && diff > 1.0)
+    {
+        fprintf(
+            stderr
+        ,   "\n  %s:%d:%s: ASSERTION FAILED: (%s) ~= (%s)\n"
+                "    expected: %llu\n"
+                "    actual:   %llu\n"
+                "    tolerance: %g\n"
+        ,   file
+        ,   line
+        ,   func
+        ,   expected_comparand_string
+        ,   actual_comparand_string
+        ,   (unsigned long long)expected
+        ,   (unsigned long long)actual
+        ,   tolerance
+        );
 
-    ++g_tests_failed;
+        exit(EXIT_FAILURE);
+    }
 }
+
+#define ASSERT_EQ_APPROX_U64(expected, actual, tolerance)                   \
+                                                                            \
+    assert_eq_approx_u64(                                                   \
+        (uint64_t)(expected)                                                \
+    ,   (uint64_t)(actual)                                                  \
+    ,   (double)(tolerance)                                                 \
+    ,   __FILE__                                                            \
+    ,   __LINE__                                                            \
+    ,   __func__                                                            \
+    ,   #expected                                                           \
+    ,   #actual                                                             \
+    )
+
 
 /* --- Tests ------------------------------------------------------------ */
 
@@ -859,7 +750,7 @@ TEST(histogram_VALUES_AT_FIXED_PERCENTILES_BATCH)
 /* --- Main ------------------------------------------------------------- */
 
 int
-main(void)
+main(int argc, char** argv)
 {
     printf("p99 histogram tests\n");
 
@@ -881,16 +772,5 @@ main(void)
     RUN_TEST_histogram_VALUES_AT_PERCENTILES_NON_MONOTONIC();
     RUN_TEST_histogram_VALUES_AT_FIXED_PERCENTILES_BATCH();
 
-    printf("\n%d tests run", g_tests_run);
-
-    if (g_tests_failed > 0)
-    {
-        printf(", %d failed\n", g_tests_failed);
-
-        return EXIT_FAILURE;
-    }
-
-    printf(", all passed\n");
-
-    return EXIT_SUCCESS;
+    return BDUT_TESTS_PASSED(argc, argv);
 }
