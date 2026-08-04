@@ -21,9 +21,9 @@ consumers so library and application agree on layout.
 
 ## Summary
 
-- The only public data type with a layout contract is `p99_histogram_t`
+- The only public data types with a layout contract are `p99_histogram_t`
   (plus its dependent typedef `p99_bucket_count_t` and constant
-  `P99_BUCKET_COUNT`);
+  `P99_BUCKET_COUNT`) and `p99_pr_fixed_results_t`;
 - Two mutually exclusive layouts exist: **default** (64-bit bucket counts)
   and **compact** (`P99_COMPACT_HISTOGRAM`, 32-bit bucket counts). The
   library and every translation unit that embeds or touches a histogram must
@@ -136,6 +136,20 @@ Initialisation: `p99_histogram_init` / `p99_histogram_clear` zero the
 entire struct (`memset`).
 
 
+### `p99_pr_fixed_results_t`
+
+Fixed-size result buffer for batch fixed-percentile queries. Layout is
+stable across platforms:
+
+| Field | Type | Size (bytes) | Notes |
+|-------|------|--------------|-------|
+| `values[10]` | `uint64_t` | 80 | p50, p75, p90, p95, p99, p99.5, p99.9, p99.99, p99.999, p99.9999 |
+
+`sizeof(p99_pr_fixed_results_t)` is **80** bytes. `p99_pr_fp_result_t` is
+caller-allocated (array of `{ double level; uint64_t value; }`); its layout
+follows the platform ABI for those member types.
+
+
 ## Public C API surface
 
 All callable entry points are declared in **include/p99/p99.h** and exported
@@ -146,7 +160,7 @@ from the shared library (see **p99.def** on Windows).
 | Lifecycle | `p99_histogram_init`, `p99_histogram_clear` |
 | Recording | `p99_histogram_push_event_time_ns`, `_us`, `_ms`, `_s` |
 | Statistics | `p99_histogram_event_count`, `p99_histogram_event_time_total`, `p99_histogram_event_time_total_raw`, `p99_histogram_has_overflowed`, `p99_histogram_min_event_time`, `p99_histogram_max_event_time`, `p99_histogram_bucket_value`, `p99_histogram_buckets` |
-| Percentiles | `p99_histogram_value_at_percentile`, `p99_histogram_value_at_p50`, `_p75`, `_p90`, `_p95`, `_p99`, `_p99_5`, `_p99_9`, `_p99_99`, `_p99_999`, `_p99_999_9` |
+| Percentiles | `p99_histogram_value_at_percentile`, `p99_histogram_value_at_p50`, `_p75`, `_p90`, `_p95`, `_p99`, `_p99_5`, `_p99_9`, `_p99_99`, `_p99_999`, `_p99_999_9`, `p99_histogram_values_at_percentiles`, `p99_histogram_values_at_fixed_percentiles` |
 
 Adding functions is a **minor** release. Removing or changing signatures is
 **major** (after 1.0). `P99_VER_*` macros in the header identify the
