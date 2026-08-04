@@ -17,121 +17,154 @@
 #include <bdut/bdut.h>
 
 #include <chrono>
+#include <cstdio>
 #include <exception>
 
+/* --- Test harness (BDUT shims) ---------------------------------------- */
+
+#define TEST(fn)                                                            \
+                                                                            \
+    static void fn();                                                       \
+    static void run_##fn()                                                  \
+    {                                                                       \
+        printf("  %s ... ", #fn);                                           \
+        fflush(stdout);                                                     \
+        fn();                                                               \
+        printf("ok\n");                                                     \
+    }                                                                       \
+    static void fn()
+
+#define ASSERT(cond)                                        BDUT_ASSERT_TRUE(cond)
 
 /* --- Tests ------------------------------------------------------------ */
 
-int main(int argc, char** argv)
+TEST(test_cpp_histogram_empty)
 {
-    /* empty */
-    {
-        p99::histogram histogram;
+    p99::histogram histogram;
 
-        BDUT_ASSERT_TRUE(histogram.empty());
-        BDUT_ASSERT_EQ(0, histogram.event_count());
-    }
+    ASSERT(histogram.empty());
+    ASSERT(0 == histogram.event_count());
+}
 
-    /* push and min/max */
-    {
-        p99::histogram histogram;
-        uint64_t       min;
-        uint64_t       max;
+TEST(test_cpp_histogram_push_and_min_max)
+{
+    p99::histogram histogram;
+    uint64_t       min;
+    uint64_t       max;
 
-        BDUT_ASSERT_TRUE(histogram.push_ns(100));
-        BDUT_ASSERT_TRUE(histogram.push_us(2));
-        BDUT_ASSERT_FALSE(histogram.empty());
-        BDUT_ASSERT_EQ(2, histogram.event_count());
-        BDUT_ASSERT_TRUE(histogram.try_get_min_event_time(&min));
-        BDUT_ASSERT_EQ(100, min);
-        BDUT_ASSERT_TRUE(histogram.try_get_max_event_time(&max));
-        BDUT_ASSERT_EQ(2000, max);
-    }
+    ASSERT(histogram.push_ns(100));
+    ASSERT(histogram.push_us(2));
+    ASSERT(!histogram.empty());
+    ASSERT(2 == histogram.event_count());
+    ASSERT(histogram.try_get_min_event_time(&min));
+    ASSERT(100 == min);
+    ASSERT(histogram.try_get_max_event_time(&max));
+    ASSERT(2000 == max);
+}
 
-    /* push duration */
-    {
-        p99::histogram histogram;
-        uint64_t       value;
+TEST(test_cpp_histogram_push_duration)
+{
+    p99::histogram histogram;
+    uint64_t       value;
 
 #if __cplusplus >= 201103L
-        BDUT_ASSERT_TRUE(histogram.push_duration(std::chrono::milliseconds(3)));
-        BDUT_ASSERT_TRUE(histogram.try_get_value_at_p50(&value));
-        BDUT_ASSERT_EQ(3000000, value);
+    ASSERT(histogram.push_duration(std::chrono::milliseconds(3)));
+    ASSERT(histogram.try_get_value_at_p50(&value));
+    ASSERT(3000000 == value);
 #else
-        (void)value;
+    (void)value;
 #endif
-    }
+}
 
-    /* bucket access */
+TEST(test_cpp_histogram_bucket_access)
+{
+    p99::histogram histogram;
+
+    ASSERT(histogram.push_ns(1));
+    ASSERT(1 == histogram[0]);
+    ASSERT(1 == histogram.at(0));
+
+    bool threw = false;
+
+    try
     {
-        p99::histogram histogram;
-
-        BDUT_ASSERT_TRUE(histogram.push_ns(1));
-        BDUT_ASSERT_EQ(1, histogram[0]);
-        BDUT_ASSERT_EQ(1, histogram.at(0));
-
-        bool threw = false;
-
-        try
-        {
-            (void)histogram.at(P99_BUCKET_COUNT);
-        }
-        catch (std::out_of_range const&)
-        {
-            threw = true;
-        }
-
-        BDUT_ASSERT_TRUE(threw);
+        (void)histogram.at(P99_BUCKET_COUNT);
     }
+    catch (std::out_of_range const&)
+    {
+        threw = true;
+    }
+
+    ASSERT(threw);
+}
 
 #if __cplusplus >= 201703L
 
-    /* optional min/max */
-    {
-        p99::histogram histogram;
+TEST(test_cpp_histogram_optional_min_max)
+{
+    p99::histogram histogram;
 
-        BDUT_ASSERT_FALSE(histogram.get_min_event_time().has_value());
-        BDUT_ASSERT_FALSE(histogram.get_max_event_time().has_value());
+    ASSERT(!histogram.get_min_event_time().has_value());
+    ASSERT(!histogram.get_max_event_time().has_value());
 
-        BDUT_ASSERT_TRUE(histogram.push_ns(42));
+    ASSERT(histogram.push_ns(42));
 
-        BDUT_ASSERT_TRUE(histogram.get_min_event_time().has_value());
-        BDUT_ASSERT_EQ(42, *histogram.get_min_event_time());
-        BDUT_ASSERT_TRUE(histogram.get_max_event_time().has_value());
-        BDUT_ASSERT_EQ(42, *histogram.get_max_event_time());
-    }
+    ASSERT(histogram.get_min_event_time().has_value());
+    ASSERT(42 == *histogram.get_min_event_time());
+    ASSERT(histogram.get_max_event_time().has_value());
+    ASSERT(42 == *histogram.get_max_event_time());
+}
 
 #endif
 
 #if __cplusplus >= 202002L
 
-    /* buckets span */
-    {
-        p99::histogram histogram;
+TEST(test_cpp_histogram_buckets_span)
+{
+    p99::histogram histogram;
 
-        BDUT_ASSERT_TRUE(histogram.push_ns(4));
+    ASSERT(histogram.push_ns(4));
 
-        std::span<p99_bucket_count_t const> const buckets = histogram.buckets();
+    std::span<p99_bucket_count_t const> const buckets = histogram.buckets();
 
-        BDUT_ASSERT_EQ(P99_BUCKET_COUNT, buckets.size());
-        BDUT_ASSERT_EQ(1, buckets[2]);
-    }
+    ASSERT(P99_BUCKET_COUNT == buckets.size());
+    ASSERT(1 == buckets[2]);
+}
 
 #endif
 
-    /* clear */
-    {
-        p99::histogram histogram;
+TEST(test_cpp_histogram_clear)
+{
+    p99::histogram histogram;
 
-        BDUT_ASSERT_TRUE(histogram.push_ns(10));
-        histogram.clear();
-        BDUT_ASSERT_TRUE(histogram.empty());
-    }
+    ASSERT(histogram.push_ns(10));
+    histogram.clear();
+    ASSERT(histogram.empty());
+}
 
-    /* struct size */
-    {
-        BDUT_ASSERT_EQ(sizeof(p99::histogram), sizeof(p99_histogram_t));
-    }
+TEST(test_cpp_histogram_struct_size)
+{
+    ASSERT(sizeof(p99::histogram) == sizeof(p99_histogram_t));
+}
+
+/* --- Main ------------------------------------------------------------- */
+
+int main(int argc, char** argv)
+{
+    printf("p99 C++ histogram tests\n");
+
+    run_test_cpp_histogram_empty();
+    run_test_cpp_histogram_push_and_min_max();
+    run_test_cpp_histogram_push_duration();
+    run_test_cpp_histogram_bucket_access();
+#if __cplusplus >= 201703L
+    run_test_cpp_histogram_optional_min_max();
+#endif
+#if __cplusplus >= 202002L
+    run_test_cpp_histogram_buckets_span();
+#endif
+    run_test_cpp_histogram_clear();
+    run_test_cpp_histogram_struct_size();
 
     return BDUT_TESTS_PASSED(argc, argv);
 }
