@@ -1,9 +1,14 @@
 # p99 - Changes <!-- omit in toc -->
 
 
-## 0.2.0-beta1 - 4th August 2026
+## 0.2.1 - 4th August 2026
 
 * bundled **BDUT** 0.4.1 under **include/bundled-software/bdut/** and converted C/C++ unit tests to use it (with optional `BDUT_ROOT` / `find_package(BDUT)` override);
+
+
+## 0.2.0 - 4th August 2026
+
+* 0.2.0;
 
 
 ## 0.2.0-alpha2 - 4th August 2026

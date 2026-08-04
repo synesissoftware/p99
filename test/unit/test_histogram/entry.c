@@ -84,10 +84,10 @@ main(int argc, char** argv)
     {
         BDUT_ASSERT_EQ(0, P99_VER_MAJOR);
         BDUT_ASSERT_EQ(2, P99_VER_MINOR);
-        BDUT_ASSERT_EQ(0, P99_VER_PATCH);
-        BDUT_ASSERT_EQ(0, P99_VER_REVISION);
-        BDUT_ASSERT_EQ(0x81, P99_VER_ALPHABETA);
-        BDUT_ASSERT_EQ(0x00020081, P99_VER);
+        BDUT_ASSERT_EQ(1, P99_VER_PATCH);
+        BDUT_ASSERT_EQ(1, P99_VER_REVISION);
+        BDUT_ASSERT_EQ(0xFF, P99_VER_ALPHABETA);
+        BDUT_ASSERT_EQ(0x000201FF, P99_VER);
     }
 
     /* histogram struct size */
