@@ -1,4 +1,4 @@
-# p99 ABI and layout stability <!-- omit in toc -->
+# p99 - ABI <!-- omit in toc -->
 
 This document describes the **C** application binary interface (ABI) for
 **p99**: what is stable, what may change before 1.0, and how to build

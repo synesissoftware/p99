@@ -1,4 +1,4 @@
-# Contributing to p99 <!-- omit in toc -->
+# p99 - Contributing <!-- omit in toc -->
 
 Thank you for your interest in **p99**. This document covers how to report
 issues, propose changes, validate them locally, and how releases are made.
