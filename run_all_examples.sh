@@ -1,14 +1,34 @@
 #! /bin/bash
 
 ScriptPath=$0
-Dir=$(cd $(dirname "$ScriptPath"); pwd)
+Dir=$(cd "$(dirname "$ScriptPath")"; pwd)
 Basename=$(basename "$ScriptPath")
 CMakeDir=${SIS_CMAKE_BUILD_DIR:-$Dir/_build}
 [[ -n "$MSYSTEM" ]] && DefaultMakeCmd=mingw32-make.exe || DefaultMakeCmd=make
 MakeCmd=${SIS_CMAKE_MAKE_COMMAND:-${SIS_CMAKE_COMMAND:-$DefaultMakeCmd}}
+ProjectNameFile="$Dir/.sis/project_name.txt"
+ProjectName=$(tr -d '[:space:]' < "$ProjectNameFile")
 
 ListOnly=0
 RunMake=1
+
+
+# ##########################################################
+# colours
+
+if command -v tput > /dev/null; then
+
+  RbEnvClr_Blue=${FG_BLUE:-$(tput setaf 4)}
+  RbEnvClr_Red=${FG_BLUE:-$(tput setaf 1)}
+  RbEnvClr_Bold=${FD_BOLD:-$(tput bold)}
+  RbEnvClr_None=${FD_NONE:-$(tput sgr0)}
+else
+
+  RbEnvClr_Blue=
+  RbEnvClr_Red=
+  RbEnvClr_Bold=
+  RbEnvClr_None=
+fi
 
 
 # ##########################################################
@@ -29,7 +49,7 @@ while [[ $# -gt 0 ]]; do
 
       [ -f "$Dir/.sis/script_info_lines.txt" ] && cat "$Dir/.sis/script_info_lines.txt"
       cat << EOF
-Runs all example programs
+Runs all (matching) example programs
 
 $ScriptPath [ ... flags/options ... ]
 
@@ -76,11 +96,11 @@ if [ $RunMake -ne 0 ]; then
 
   if [ $ListOnly -eq 0 ]; then
 
-    echo "Executing build (via command \`$MakeCmd\`) and then running all example programs"
+    echo "Executing build of ${ProjectName} (via command \`$MakeCmd\`) and then running all example programs"
 
-    mkdir -p $CMakeDir || exit 1
+    mkdir -p "$CMakeDir" || exit 1
 
-    cd $CMakeDir
+    cd "$CMakeDir"
 
     $MakeCmd
     status=$?
@@ -92,6 +112,8 @@ else
   if [ ! -d "$CMakeDir" ] || [ ! -f "$CMakeDir/CMakeCache.txt" ] || [ ! -d "$CMakeDir/CMakeFiles" ]; then
 
     >&2 echo "$ScriptPath: cannot run in '--no-make' mode without a previous successful build step"
+
+    exit 1
   fi
 fi
 
@@ -99,10 +121,10 @@ if [ $status -eq 0 ]; then
 
   if [ $ListOnly -ne 0 ]; then
 
-    echo "Listing all example programs"
+    echo "Listing all ${ProjectName} example programs"
   else
 
-    echo "Running all example programs"
+    echo "Running all ${ProjectName} example programs"
   fi
 
   for f in $(find $CMakeDir -maxdepth 1 -type f '(' -name 'build_histogram' -o -name 'build_histogram.exe' ')' -exec test -x {} \; -print)
