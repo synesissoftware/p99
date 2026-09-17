@@ -222,6 +222,8 @@ if(P99_BUILD_TESTS)
     p99_configure_cxx_consumer(p99_test_cxx)
     add_test(NAME histogram_cpp COMMAND p99_test_cxx)
     set_tests_properties(histogram_cpp PROPERTIES TIMEOUT 120)
+
+    add_subdirectory(test/scratch/versions)
 endif()
 
 # --- Examples --------------------------------------------------------------
