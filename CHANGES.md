@@ -1,6 +1,12 @@
 # p99 - Changes <!-- omit in toc -->
 
 
+## Unreleased
+
+* Applied **misc-dev-scripts** **0.6.0** editor/Git/`.sis` drop-in templates on **boilerplate**;
+* Restored historical **.gitignore** patterns as a sorted union with **misc-dev-scripts** gold section layout;
+
+
 ## 0.2.0-alpha1 - 7th July 2026
 
 * header-only C++ wrapper (`include/p99/p99.hpp`, `p99::histogram`);
