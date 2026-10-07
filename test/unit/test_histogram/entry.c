@@ -1,11 +1,11 @@
 /**
- * @file test_histogram.c
+ * @file test/unit/test_histogram/entry.c
  * @brief Unit tests for the p99 histogram.
  *
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
- * Updated: 6th July 2026
+ * Updated: 4th August 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
@@ -14,165 +14,38 @@
 
 #include <p99/p99.h>
 
+#include <bdut/bdut.h>
+
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/* --- Test harness ----------------------------------------------------- */
-
-static int g_tests_run    = 0;
-static int g_tests_failed = 0;
+/* --- Test harness (BDUT shims) ---------------------------------------- */
 
 #define TEST(fn)                                                            \
                                                                             \
-    static void fn(void);                                                   \
-    static void run_##fn(void)                                              \
+    static void TEST_##fn(void);                                            \
+    static void RUN_TEST_##fn(void)                                         \
     {                                                                       \
-        ++g_tests_run;                                                      \
         printf("  %s ... ", #fn);                                           \
         fflush(stdout);                                                     \
-        fn();                                                               \
+        TEST_##fn();                                                        \
         printf("ok\n");                                                     \
     }                                                                       \
-    static void fn(void)
+    static void TEST_##fn(void)
 
-#define ASSERT(expr, file, line, func)                                      \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        if (!(expr))                                                        \
-        {                                                                   \
-            fprintf(                                                        \
-                stderr                                                      \
-            ,   "\n  %s:%d:%s: ASSERTION FAILED: %s\n"                      \
-            ,   file                                                        \
-            ,   line                                                        \
-            ,   func                                                        \
-            ,   #expr                                                       \
-            );                                                              \
-            ++g_tests_failed;                                               \
-                                                                            \
-            return;                                                         \
-        }                                                                   \
-    } while (0)
+#define ASSERT_TRUE(cond)                                   BDUT_ASSERT_TRUE(cond)
+#define ASSERT_FALSE(cond)                                  BDUT_ASSERT_FALSE(cond)
+#define ASSERT_EQ_U64(expected, actual)                     BDUT_ASSERT_EQ((expected), (actual))
+#define ASSERT_EQ_SIZE(expected, actual)                    BDUT_ASSERT_EQ((expected), (actual))
+#define ASSERT_LE_SIZE(expected, actual)                    BDUT_ASSERT_LE((expected), (actual))
 
-#define ASSERT_TRUE(cond)                                   ASSERT(cond, __FILE__, __LINE__, __func__)
-#define ASSERT_FALSE(cond)                                  ASSERT(!(cond), __FILE__, __LINE__, __func__)
-
-#define ASSERT_SCALAR_CMP_U64_(expected, actual, comparand, failed_cond)    \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        uint64_t const _p99_expected = (uint64_t)(expected);                \
-        uint64_t const _p99_actual   = (uint64_t)(actual);                  \
-                                                                            \
-        if (failed_cond) \
-        { \
-            assert_scalar_cmp_u64(                                          \
-                _p99_expected                                               \
-            ,   _p99_actual                                                 \
-            ,   __FILE__, __LINE__, __func__                                \
-            ,   #expected                                                   \
-            ,   (comparand)                                                 \
-            ,   #actual                                                     \
-            );                                                              \
-                                                                            \
-            return;                                                         \
-        }                                                                   \
-    } while (0)
-
-#define ASSERT_EQ_U64(expected, actual)                                     \
-                                                                            \
-    ASSERT_SCALAR_CMP_U64_(                                                 \
-        (expected)                                                          \
-    ,   (actual)                                                            \
-    ,   "=="                                                                \
-    ,   _p99_expected != _p99_actual                                        \
-    )
-
-#define ASSERT_EQ_SIZE(expected, actual)                                    \
-                                                                            \
-    ASSERT_SCALAR_CMP_U64_(                                                 \
-        (expected)                                                          \
-    ,   (actual)                                                            \
-    ,   "=="                                                                \
-    ,   _p99_expected != _p99_actual                                        \
-    )
-
-#define ASSERT_LE_SIZE(expected, actual)                                    \
-                                                                            \
-    ASSERT_SCALAR_CMP_U64_(                                                 \
-        (expected)                                                          \
-    ,   (actual)                                                            \
-    ,   "<="                                                                \
-    ,   _p99_expected < _p99_actual                                         \
-    )
-
-#define ASSERT_SCALAR_EQ_APPROX_U64_(expected, actual, tolerance)           \
-                                                                            \
-    do                                                                      \
-    {                                                                       \
-        uint64_t const _p99_expected = (uint64_t)(expected);                \
-        uint64_t const _p99_actual   = (uint64_t)(actual);                  \
-        double const   _p99_tolerance_fraction = (double)(tolerance);       \
-        double const   _p99_diff =                                          \
-            fabs((double)_p99_actual - (double)_p99_expected);              \
-        double const   _p99_tolerance =                                     \
-            fabs((double)_p99_expected * _p99_tolerance_fraction);          \
-                                                                            \
-        if (_p99_diff > _p99_tolerance && _p99_diff > 1.0)                  \
-        {                                                                   \
-            assert_scalar_eq_approx_u64(                                    \
-                _p99_expected                                               \
-            ,   _p99_actual                                                 \
-            ,   _p99_tolerance_fraction                                     \
-            ,   __FILE__                                                    \
-            ,   __LINE__                                                    \
-            ,   __func__                                                    \
-            ,   #expected                                                   \
-            ,   #actual                                                     \
-            );                                                              \
-                                                                            \
-            return;                                                         \
-        }                                                                   \
-    } while (0)
-
-#define ASSERT_EQ_APPROX_U64(expected, actual, tolerance)                   \
-                                                                            \
-    ASSERT_SCALAR_EQ_APPROX_U64_((expected), (actual), (tolerance))
+/* Approximate equality is not provided by BDUT. */
 
 static void
-assert_scalar_cmp_u64(
-    uint64_t expected
-,   uint64_t actual
-,   char const* file
-,   int line
-,   char const* func
-,   char const* expected_comparand_string
-,   char const* comparand_string
-,   char const* actual_comparand_string
-)
-{
-    fprintf(
-        stderr
-    ,   "\n  %s:%d:%s: ASSERTION FAILED: (%s) %s (%s)\n"
-            "    expected: %llu\n"
-            "    actual:   %llu\n"
-    ,   file, line, func
-    ,   expected_comparand_string
-    ,   comparand_string
-    ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
-    );
-
-    ++g_tests_failed;
-}
-
-static void
-assert_scalar_eq_approx_u64(
+assert_eq_approx_u64(
     uint64_t expected
 ,   uint64_t actual
 ,   double tolerance_fraction
@@ -183,40 +56,58 @@ assert_scalar_eq_approx_u64(
 ,   char const* actual_comparand_string
 )
 {
-    double tolerance = fabs((double)expected * tolerance_fraction);
+    double const diff = fabs((double)actual - (double)expected);
+    double const tolerance = fabs((double)expected * tolerance_fraction);
 
-    fprintf(
-        stderr
-    ,   "\n  %s:%d:%s: ASSERTION FAILED: (%s) ~= (%s)\n"
-            "    expected: %llu\n"
-            "    actual:   %llu\n"
-            "    tolerance: %g\n"
-    ,   file
-    ,   line
-    ,   func
-    ,   expected_comparand_string
-    ,   actual_comparand_string
-    ,   (unsigned long long)expected
-    ,   (unsigned long long)actual
-    ,   tolerance
-    );
+    if (diff > tolerance && diff > 1.0)
+    {
+        fprintf(
+            stderr
+        ,   "\n  %s:%d:%s: ASSERTION FAILED: (%s) ~= (%s)\n"
+                "    expected: %llu\n"
+                "    actual:   %llu\n"
+                "    tolerance: %g\n"
+        ,   file
+        ,   line
+        ,   func
+        ,   expected_comparand_string
+        ,   actual_comparand_string
+        ,   (unsigned long long)expected
+        ,   (unsigned long long)actual
+        ,   tolerance
+        );
 
-    ++g_tests_failed;
+        exit(EXIT_FAILURE);
+    }
 }
+
+#define ASSERT_EQ_APPROX_U64(expected, actual, tolerance)                   \
+                                                                            \
+    assert_eq_approx_u64(                                                   \
+        (uint64_t)(expected)                                                \
+    ,   (uint64_t)(actual)                                                  \
+    ,   (double)(tolerance)                                                 \
+    ,   __FILE__                                                            \
+    ,   __LINE__                                                            \
+    ,   __func__                                                            \
+    ,   #expected                                                           \
+    ,   #actual                                                             \
+    )
+
 
 /* --- Tests ------------------------------------------------------------ */
 
-TEST(test_version)
+TEST(VERSION)
 {
     ASSERT_EQ_SIZE(0, P99_VER_MAJOR);
-    ASSERT_EQ_SIZE(2, P99_VER_MINOR);
+    ASSERT_EQ_SIZE(3, P99_VER_MINOR);
     ASSERT_EQ_SIZE(0, P99_VER_PATCH);
-    ASSERT_EQ_SIZE(0, P99_VER_REVISION);
+    ASSERT_EQ_SIZE(P99_VER_PATCH, P99_VER_REVISION);
     ASSERT_EQ_SIZE(0x41, P99_VER_ALPHABETA);
-    ASSERT_EQ_SIZE(0x00020041, P99_VER);
+    ASSERT_EQ_SIZE(0x00030041, P99_VER);
 }
 
-TEST(test_histogram_struct_size)
+TEST(histogram_STRUCT_SIZE)
 {
     size_t const header_size  = offsetof(p99_histogram_t, buckets);
     size_t const buckets_size = P99_BUCKET_COUNT * sizeof(p99_bucket_count_t);
@@ -232,7 +123,7 @@ TEST(test_histogram_struct_size)
 #endif
 }
 
-TEST(test_histogram_default)
+TEST(histogram_DEFAULT)
 {
     p99_histogram_t h;
     uint64_t        total;
@@ -258,7 +149,7 @@ TEST(test_histogram_default)
     ASSERT_FALSE(p99_histogram_bucket_value(&h, 64, &bucket));
 }
 
-TEST(test_histogram_bucket_placement)
+TEST(histogram_BUCKET_PLACEMENT)
 {
     p99_histogram_t h;
     uint64_t        value;
@@ -314,7 +205,7 @@ TEST(test_histogram_bucket_placement)
     ASSERT_EQ_U64(1, value);
 
     p99_histogram_init(&h);
-    ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, 1ULL << 63));
+    ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, 1ull << 63));
     ASSERT_TRUE(p99_histogram_bucket_value(&h, 63, &value));
     ASSERT_EQ_U64(1, value);
 
@@ -326,7 +217,7 @@ TEST(test_histogram_bucket_placement)
     ASSERT_FALSE(p99_histogram_bucket_value(&h, 64, &value));
 }
 
-TEST(test_histogram_push_events)
+TEST(histogram_push_events)
 {
     p99_histogram_t h;
     uint64_t        min;
@@ -347,9 +238,9 @@ TEST(test_histogram_push_events)
     ASSERT_TRUE(p99_histogram_min_event_time(&h, &min));
     ASSERT_EQ_U64(1, min);
     ASSERT_TRUE(p99_histogram_max_event_time(&h, &max));
-    ASSERT_EQ_U64(2000000000ULL, max);
+    ASSERT_EQ_U64(2000000000ull, max);
     ASSERT_TRUE(p99_histogram_event_time_total(&h, &total));
-    ASSERT_EQ_U64(2005010104ULL, total);
+    ASSERT_EQ_U64(2005010104ull, total);
 
     ASSERT_EQ_U64(1, p99_histogram_buckets(&h)[0]);
     ASSERT_EQ_U64(1, p99_histogram_buckets(&h)[1]);
@@ -365,7 +256,7 @@ TEST(test_histogram_push_events)
     ASSERT_EQ_U64(0, total);
 }
 
-TEST(test_histogram_overflow)
+TEST(histogram_OVERFLOW)
 {
     p99_histogram_t h;
     uint64_t        total;
@@ -383,7 +274,7 @@ TEST(test_histogram_overflow)
     ASSERT_EQ_U64(UINT64_MAX, p99_histogram_event_time_total_raw(&h));
 }
 
-TEST(test_histogram_percentiles_empty)
+TEST(histogram_PERCENTILES_EMPTY)
 {
     p99_histogram_t h;
     uint64_t        value;
@@ -395,7 +286,7 @@ TEST(test_histogram_percentiles_empty)
     ASSERT_FALSE(p99_histogram_value_at_p99(&h, &value));
 }
 
-TEST(test_histogram_percentiles_single_event)
+TEST(histogram_PERCENTILES_SINGLE_EVENT)
 {
     p99_histogram_t h;
     uint64_t        value;
@@ -422,7 +313,7 @@ TEST(test_histogram_percentiles_single_event)
     ASSERT_EQ_U64(100, value);
 }
 
-TEST(test_histogram_percentiles_interpolation)
+TEST(histogram_PERCENTILES_INTERPOLATION)
 {
     p99_histogram_t h;
     uint64_t        p50;
@@ -450,7 +341,7 @@ TEST(test_histogram_percentiles_interpolation)
     ASSERT_TRUE(value <= 200);
 }
 
-TEST(test_histogram_percentiles_wide_range)
+TEST(histogram_PERCENTILES_WIDE_RANGE)
 {
     p99_histogram_t h;
     uint64_t        min;
@@ -477,7 +368,7 @@ TEST(test_histogram_percentiles_wide_range)
         10000000,
         100000000,
         1000000000,
-        10000000000ULL,
+        10000000000ull,
     };
 
     p99_histogram_init(&h);
@@ -492,7 +383,7 @@ TEST(test_histogram_percentiles_wide_range)
     ASSERT_TRUE(p99_histogram_min_event_time(&h, &min));
     ASSERT_EQ_U64(1, min);
     ASSERT_TRUE(p99_histogram_max_event_time(&h, &max));
-    ASSERT_EQ_U64(10000000000ULL, max);
+    ASSERT_EQ_U64(10000000000ull, max);
 
     ASSERT_TRUE(p99_histogram_value_at_p50(&h, &p50));
     ASSERT_TRUE(p99_histogram_value_at_p75(&h, &p75));
@@ -516,10 +407,10 @@ TEST(test_histogram_percentiles_wide_range)
     ASSERT_TRUE(p99_999 <= p99_999_9);
 
     ASSERT_TRUE(p50 >= 1);
-    ASSERT_TRUE(p99_999_9 <= 10000000000ULL);
+    ASSERT_TRUE(p99_999_9 <= 10000000000ull);
 }
 
-TEST(test_histogram_percentiles_many_events)
+TEST(histogram_PERCENTILES_MANY_EVENTS)
 {
     p99_histogram_t h;
     const size_t    count = 100000;
@@ -577,7 +468,7 @@ TEST(test_histogram_percentiles_many_events)
     ASSERT_TRUE(p99_999 <= p99_999_9);
 }
 
-TEST(test_histogram_compare_float_and_int_percentiles)
+TEST(histogram_COMPARE_FLOAT_AND_INT_PERCENTILES)
 {
     p99_histogram_t h;
     uint64_t        float_p50;
@@ -650,36 +541,236 @@ TEST(test_histogram_compare_float_and_int_percentiles)
     ASSERT_EQ_APPROX_U64(float_p99_999_9, int_p99_999_9, 0.01);
 }
 
+TEST(histogram_VALUES_AT_PERCENTILES_EMPTY)
+{
+    p99_histogram_t      h;
+    p99_pr_fp_result_t   elements[2];
+    p99_pr_fixed_results_t fixed;
+    size_t               i;
+
+    p99_histogram_init(&h);
+
+    elements[0].level = 50.0;
+    elements[0].value = 0xDEADBEEFDEADBEEFull;
+    elements[1].level = 99.0;
+    elements[1].value = 0xCAFEBABECAFEBABEull;
+
+    for (i = 0; i < sizeof(fixed.values) / sizeof(fixed.values[0]); ++i)
+    {
+        fixed.values[i] = 0xDEADBEEFDEADBEEFull;
+    }
+
+    ASSERT_FALSE(p99_histogram_values_at_percentiles(&h, 2, elements));
+    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFull, elements[0].value);
+    ASSERT_EQ_U64(0xCAFEBABECAFEBABEull, elements[1].value);
+
+    ASSERT_FALSE(p99_histogram_values_at_fixed_percentiles(&h, &fixed));
+
+    for (i = 0; i < sizeof(fixed.values) / sizeof(fixed.values[0]); ++i)
+    {
+        ASSERT_EQ_U64(0xDEADBEEFDEADBEEFull, fixed.values[i]);
+    }
+}
+
+TEST(histogram_VALUES_AT_PERCENTILES_ZERO_LENGTH)
+{
+    p99_histogram_t    h;
+    p99_pr_fp_result_t elements[1];
+
+    p99_histogram_init(&h);
+    ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, 100));
+
+    elements[0].level = 50.0;
+    elements[0].value = 0xDEADBEEFDEADBEEFull;
+
+    ASSERT_TRUE(p99_histogram_values_at_percentiles(&h, 0, elements));
+    ASSERT_EQ_U64(0xDEADBEEFDEADBEEFull, elements[0].value);
+}
+
+TEST(histogram_VALUES_AT_PERCENTILES_BATCH)
+{
+    p99_histogram_t    h;
+    p99_pr_fp_result_t elements[10];
+    uint64_t           expected;
+    size_t             i;
+
+    static double const levels[] = {
+        50.0
+    ,   75.0
+    ,   90.0
+    ,   95.0
+    ,   99.0
+    ,   99.5
+    ,   99.9
+    ,   99.99
+    ,   99.999
+    ,   99.9999
+    };
+
+    p99_histogram_init(&h);
+
+    for (i = 1; i <= 100000; ++i)
+    {
+        ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, (uint64_t)i));
+    }
+
+    for (i = 0; i < sizeof(levels) / sizeof(levels[0]); ++i)
+    {
+        elements[i].level = levels[i];
+        elements[i].value = 0;
+    }
+
+    ASSERT_TRUE(p99_histogram_values_at_percentiles(
+        &h
+    ,   sizeof(levels) / sizeof(levels[0])
+    ,   elements
+    ));
+
+    for (i = 0; i < sizeof(levels) / sizeof(levels[0]); ++i)
+    {
+        ASSERT_TRUE(p99_histogram_value_at_percentile(
+            &h
+        ,   levels[i]
+        ,   &expected
+        ));
+        ASSERT_EQ_U64(expected, elements[i].value);
+    }
+}
+
+
+TEST(histogram_VALUES_AT_PERCENTILES_NON_MONOTONIC)
+{
+    p99_histogram_t    h;
+    p99_pr_fp_result_t elements[3];
+    uint64_t           p99_value;
+    uint64_t           p75_value;
+    size_t             i;
+
+    p99_histogram_init(&h);
+
+    for (i = 1; i <= 100000; ++i)
+    {
+        ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, (uint64_t)i));
+    }
+
+    ASSERT_TRUE(p99_histogram_value_at_percentile(&h, 99.0, &p99_value));
+    ASSERT_TRUE(p99_histogram_value_at_percentile(&h, 75.0, &p75_value));
+
+    elements[0].level = 99.0;
+    elements[0].value = 0;
+    elements[1].level = 50.0;
+    elements[1].value = 0;
+    elements[2].level = 99.0;
+    elements[2].value = 0;
+
+    ASSERT_TRUE(p99_histogram_values_at_percentiles(
+        &h
+    ,   sizeof(elements) / sizeof(elements[0])
+    ,   elements
+    ));
+
+    ASSERT_EQ_U64(p99_value, elements[0].value);
+    ASSERT_EQ_U64(p99_value, elements[1].value);
+    ASSERT_EQ_U64(p99_value, elements[2].value);
+    ASSERT_TRUE(elements[1].value != p75_value);
+}
+
+TEST(histogram_VALUES_AT_FIXED_PERCENTILES_BATCH)
+{
+    p99_histogram_t          h;
+    p99_pr_fixed_results_t   batch;
+    uint64_t                 p50;
+    uint64_t                 p75;
+    uint64_t                 p90;
+    uint64_t                 p95;
+    uint64_t                 p99;
+    uint64_t                 p99_5;
+    uint64_t                 p99_9;
+    uint64_t                 p99_99;
+    uint64_t                 p99_999;
+    uint64_t                 p99_999_9;
+    size_t                   i;
+
+    static uint64_t const values[] = {
+        1
+    ,   10
+    ,   100
+    ,   1000
+    ,   10000
+    ,   100000
+    ,   1000000
+    ,   10000000
+    ,   100000000
+    ,   1000000000
+    ,   10000000000ULL
+    };
+
+    p99_histogram_init(&h);
+
+    for (i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
+    {
+        ASSERT_TRUE(p99_histogram_push_event_time_ns(&h, values[i]));
+    }
+
+    ASSERT_TRUE(p99_histogram_values_at_fixed_percentiles(&h, &batch));
+
+    ASSERT_TRUE(p99_histogram_value_at_p50(&h, &p50));
+    ASSERT_TRUE(p99_histogram_value_at_p75(&h, &p75));
+    ASSERT_TRUE(p99_histogram_value_at_p90(&h, &p90));
+    ASSERT_TRUE(p99_histogram_value_at_p95(&h, &p95));
+    ASSERT_TRUE(p99_histogram_value_at_p99(&h, &p99));
+    ASSERT_TRUE(p99_histogram_value_at_p99_5(&h, &p99_5));
+    ASSERT_TRUE(p99_histogram_value_at_p99_9(&h, &p99_9));
+    ASSERT_TRUE(p99_histogram_value_at_p99_99(&h, &p99_99));
+    ASSERT_TRUE(p99_histogram_value_at_p99_999(&h, &p99_999));
+    ASSERT_TRUE(p99_histogram_value_at_p99_999_9(&h, &p99_999_9));
+
+    ASSERT_EQ_U64(p50, batch.values[0]);
+    ASSERT_EQ_U64(p75, batch.values[1]);
+    ASSERT_EQ_U64(p90, batch.values[2]);
+    ASSERT_EQ_U64(p95, batch.values[3]);
+    ASSERT_EQ_U64(p99, batch.values[4]);
+    ASSERT_EQ_U64(p99_5, batch.values[5]);
+    ASSERT_EQ_U64(p99_9, batch.values[6]);
+    ASSERT_EQ_U64(p99_99, batch.values[7]);
+    ASSERT_EQ_U64(p99_999, batch.values[8]);
+    ASSERT_EQ_U64(p99_999_9, batch.values[9]);
+
+    ASSERT_TRUE(batch.values[0] <= batch.values[1]);
+    ASSERT_TRUE(batch.values[1] <= batch.values[2]);
+    ASSERT_TRUE(batch.values[2] <= batch.values[3]);
+    ASSERT_TRUE(batch.values[3] <= batch.values[4]);
+    ASSERT_TRUE(batch.values[4] <= batch.values[5]);
+    ASSERT_TRUE(batch.values[5] <= batch.values[6]);
+    ASSERT_TRUE(batch.values[6] <= batch.values[7]);
+    ASSERT_TRUE(batch.values[7] <= batch.values[8]);
+    ASSERT_TRUE(batch.values[8] <= batch.values[9]);
+}
+
 /* --- Main ------------------------------------------------------------- */
 
 int
-main(void)
+main(int argc, char** argv)
 {
     printf("p99 histogram tests\n");
 
-    run_test_version();
-    run_test_histogram_struct_size();
-    run_test_histogram_default();
-    run_test_histogram_bucket_placement();
-    run_test_histogram_push_events();
-    run_test_histogram_overflow();
-    run_test_histogram_percentiles_empty();
-    run_test_histogram_percentiles_single_event();
-    run_test_histogram_percentiles_interpolation();
-    run_test_histogram_percentiles_wide_range();
-    run_test_histogram_percentiles_many_events();
-    run_test_histogram_compare_float_and_int_percentiles();
+    RUN_TEST_VERSION();
+    RUN_TEST_histogram_STRUCT_SIZE();
+    RUN_TEST_histogram_DEFAULT();
+    RUN_TEST_histogram_BUCKET_PLACEMENT();
+    RUN_TEST_histogram_push_events();
+    RUN_TEST_histogram_OVERFLOW();
+    RUN_TEST_histogram_PERCENTILES_EMPTY();
+    RUN_TEST_histogram_PERCENTILES_SINGLE_EVENT();
+    RUN_TEST_histogram_PERCENTILES_INTERPOLATION();
+    RUN_TEST_histogram_PERCENTILES_WIDE_RANGE();
+    RUN_TEST_histogram_PERCENTILES_MANY_EVENTS();
+    RUN_TEST_histogram_COMPARE_FLOAT_AND_INT_PERCENTILES();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_EMPTY();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_ZERO_LENGTH();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_BATCH();
+    RUN_TEST_histogram_VALUES_AT_PERCENTILES_NON_MONOTONIC();
+    RUN_TEST_histogram_VALUES_AT_FIXED_PERCENTILES_BATCH();
 
-    printf("\n%d tests run", g_tests_run);
-
-    if (g_tests_failed > 0)
-    {
-        printf(", %d failed\n", g_tests_failed);
-
-        return EXIT_FAILURE;
-    }
-
-    printf(", all passed\n");
-
-    return EXIT_SUCCESS;
+    return BDUT_TESTS_PASSED(argc, argv);
 }

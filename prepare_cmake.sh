@@ -47,6 +47,7 @@ VerboseMakefile=0
 # misc-dev-scripts/shell-scripts/cmake-helpers/prepare_cmake.sh.
 
 
+BDUTDirGiven=
 BenchmarksDisabled=0
 CompactHistogram=0
 DocsEnabled=0
@@ -143,6 +144,11 @@ while [[ $# -gt 0 ]]; do
 
       # AlwaysUseColours=1 - this is handled by the for loop above
       ;;
+    --bdut-root-dir)
+
+      shift
+      BDUTDirGiven=$1
+      ;;
     --build-shared-libs)
 
       BuildSharedLibs=1
@@ -203,6 +209,11 @@ Flags/options:
     --always-use-colors
     --always-use-colours
         forces use of colours even when stdout is not a TTY
+
+    --bdut-root-dir <dir>
+        specifies the BDUT root-directory, which will be passed to CMake
+        as the variable BDUT_ROOT, from which the BDUT library will be used,
+        rather than using the bundled version
 
     --build-shared-libs
         builds ${ProjectName} as a shared library (BUILD_SHARED_LIBS=ON)
@@ -278,6 +289,7 @@ mkdir -p "$CMakeDir" || exit 1
 echo
 echo "Executing CMake for ${ProjectNameClr} (in ${CMakeDirClr})"
 
+if [ -z "$BDUTDirGiven" ]; then CMakeBDUTVariable="" ; else CMakeBDUTVariable="-DBDUT_ROOT=$BDUTDirGiven/" ; fi
 if [ $BenchmarksDisabled -eq 0 ]; then CMakeBuildBenchmarksFlag="ON" ; else CMakeBuildBenchmarksFlag="OFF" ; fi
 if [ $BuildSharedLibs -eq 0 ]; then CMakeBuildSharedLibsFlag="OFF" ; else CMakeBuildSharedLibsFlag="ON" ; fi
 if [ $CompactHistogram -eq 0 ]; then CMakeCompactHistogramFlag="OFF" ; else CMakeCompactHistogramFlag="ON" ; fi
@@ -304,6 +316,7 @@ if [ $MinGW -ne 0 ]; then
 fi
 
 cmake \
+  $CMakeBDUTVariable \
   -DBUILD_EXAMPLES:BOOL=$CMakeBuildExamplesFlag \
   -DBUILD_SHARED_LIBS:BOOL=$CMakeBuildSharedLibsFlag \
   -DBUILD_TESTING:BOOL=$CMakeBuildTestingFlag \
@@ -342,3 +355,4 @@ exit $status
 
 
 # ############################## end of file ############################# #
+

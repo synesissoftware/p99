@@ -4,7 +4,9 @@ on:
   push:
     branches:
     - master
-    - dev
+     - dev
+     - boilerplate
+     - skeleton
   pull_request:
 
 jobs:

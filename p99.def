@@ -42,3 +42,5 @@ EXPORTS
     p99_histogram_value_at_p99_99
     p99_histogram_value_at_p99_999
     p99_histogram_value_at_p99_999_9
+    p99_histogram_values_at_percentiles
+    p99_histogram_values_at_fixed_percentiles

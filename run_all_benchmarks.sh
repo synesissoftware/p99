@@ -6,6 +6,7 @@ Basename=$(basename "$ScriptPath")
 CMakeDir=${SIS_CMAKE_BUILD_DIR:-$Dir/_build}
 [[ -n "$MSYSTEM" ]] && DefaultMakeCmd=mingw32-make.exe || DefaultMakeCmd=make
 MakeCmd=${SIS_CMAKE_MAKE_COMMAND:-${SIS_CMAKE_COMMAND:-$DefaultMakeCmd}}
+ProjectName=$(cat "$Dir/.sis/project_name.txt")
 
 ListOnly=0
 RunMake=1
@@ -105,7 +106,7 @@ if [ $status -eq 0 ]; then
     echo "Running all benchmark programs"
   fi
 
-  for f in $(find $CMakeDir -maxdepth 1 -type f '(' -name 'p99_benchmark' -o -name 'p99_benchmark.exe' ')' -exec test -x {} \; -print)
+  for f in $(find $CMakeDir -maxdepth 1 -type f '(' -name "${ProjectName}_benchmark" -o -name "${ProjectName}_benchmark.exe" ')' -exec test -x {} \; -print)
   do
 
     if [ $ListOnly -ne 0 ]; then

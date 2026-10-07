@@ -35,6 +35,8 @@
 * [x] `SIS_CMAKE_BUILD_DIR`, Debug/Release,
   disable-tests/examples/benchmarks, MinGW, MSVC-MT, `--run-make`, and
   `--help` consistent with **b64** / **BDUT** scripts;
+* [x] Bundled **BDUT** for unit tests (`include/bundled-software/bdut/`,
+  `prepare_cmake.sh --bdut-root-dir`);
 
 ### Other build systems
 
@@ -86,7 +88,8 @@
 ## Performance improvements
 
 * [ ] ⏸️ binary scaling; deferred past v0.1.0;
-* [ ] multi-percentile retrieval;
+* [x] multi-percentile retrieval (`p99_histogram_values_at_percentiles`,
+  `p99_histogram_values_at_fixed_percentiles`; single-pass bucket walks);
 
 
 ## Packaging improvements
