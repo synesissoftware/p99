@@ -7,6 +7,11 @@
 * Restored historical **.gitignore** patterns as a sorted union with **misc-dev-scripts** gold section layout;
 
 
+## 0.3.0-beta1 - 9th October 2026
+
+* promoted to beta — `P99_VER_ALPHABETA` is now `0x81`;
+
+
 ## 0.3.0-alpha1 - 4th August 2026
 
 * batch percentile queries — `p99_histogram_values_at_percentiles` and `p99_histogram_values_at_fixed_percentiles`, with result types `p99_pr_fp_result_t` and `p99_pr_fixed_results_t` (80-byte fixed set);
