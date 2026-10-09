@@ -1,15 +1,12 @@
 # p99 - Changes <!-- omit in toc -->
 
 
-## Unreleased
-
-* Applied **misc-dev-scripts** **0.6.0** editor/Git/`.sis` drop-in templates on **boilerplate**;
-* Restored historical **.gitignore** patterns as a sorted union with **misc-dev-scripts** gold section layout;
-
-
 ## 0.3.0-beta1 - 9th October 2026
 
 * promoted to beta — `P99_VER_ALPHABETA` is now `0x81`;
+* synced **run_all_examples.{sh,cmd}** and **run_all_scratch_tests.{sh,cmd}** to **misc-dev-scripts** gold, adding optional **.sis/ci_examples_allowed_to_fail.txt** and **.sis/ci_scratch_tests_allowed_to_fail.txt** support;
+* Applied **misc-dev-scripts** **0.6.0** editor/Git/`.sis` drop-in templates on **boilerplate**;
+* Restored historical **.gitignore** patterns as a sorted union with **misc-dev-scripts** gold section layout;
 
 
 ## 0.3.0-alpha1 - 4th August 2026
