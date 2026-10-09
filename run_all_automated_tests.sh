@@ -1,24 +1,6 @@
 #! /bin/bash
 
 # ##########################################################
-# functions - 1
-
-sis_cmake_is_truey() {
-  case "$(printf '%s' "${1:-}" | tr '[:upper:]' '[:lower:]')" in
-
-    1|ok|on|true|yes|y)
-
-      return 0
-    ;;
-    *)
-
-      return 1
-      ;;
-  esac
-}
-
-
-# ##########################################################
 # constants and variables
 
 Basename=$(basename "$0")
@@ -29,7 +11,10 @@ ProjectName=$(tr -d '[:space:]' < "$ProjectNameFile")
 ScriptPath=$0
 
 AlwaysUseColours=${SIS_CMAKE_ALWAYS_USE_COLOURS:-${SIS_ALWAYS_USE_COLOURS:-0}}
+ComponentOnly=0
+ForwardedArgs=()
 SisUseColours=0
+UnitOnly=0
 
 
 # ##########################################################
@@ -85,33 +70,8 @@ if [ $SisUseColours -ne 0 ]; then
   SisClr_Yellow=${FG_YELLOW:-$(tput setaf 3)}
 fi
 
-CMakeDirClr="${SisClr_Blue}${SisClr_Bold}${CMakeDir}${SisClr_None}"
 ProjectNameClr="${SisClr_Blue}${SisClr_Bold}${ProjectName}${SisClr_None}"
 ScriptPathClr="${SisClr_Blue}${SisClr_Bold}${ScriptPath}${SisClr_None}"
-
-
-# ##########################################################
-# functions - 2
-
-sis_cmake_build() {
-
-  local config="${SIS_CMAKE_CONFIG:-Release}"
-  local args=(--build "$CMakeDir")
-  if [ -f "$CMakeDir/CMakeCache.txt" ] && grep -q '^CMAKE_CONFIGURATION_TYPES:' "$CMakeDir/CMakeCache.txt" 2>/dev/null; then
-
-    args+=(--config "$config")
-  fi
-  if [ "$#" -gt 0 ]; then
-
-    local t
-    for t in "$@"; do
-
-      args+=(--target "$t")
-    done
-  fi
-
-  cmake "${args[@]}"
-}
 
 
 # ##########################################################
@@ -122,13 +82,22 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --always-use-colors|--always-use-colours|-A)
 
-      # AlwaysUseColours=1 - this is handled by the for loop above
+      # AlwaysUseColours=1 - handled above; forward so category runners see it
+      ForwardedArgs+=("$1")
+      ;;
+    --unit-only)
+
+      UnitOnly=1
+      ;;
+    --component-only)
+
+      ComponentOnly=1
       ;;
     --help)
 
       [ -f "$Dir/.sis/script_info_lines.txt" ] && cat "$Dir/.sis/script_info_lines.txt"
       cat << EOF
-Cleans CMake-generated build artefacts via cmake --build --target clean
+Runs all (matching) automated test programs (unit and component)
 
 ${ScriptPath} [ ... flags/options ... ]
 
@@ -140,6 +109,14 @@ Flags/options:
     --always-use-colors
     --always-use-colours
         forces use of colours even when stdout is not a TTY
+
+    --component-only
+        runs only component-test programs
+
+    --unit-only
+        runs only unit-test programs
+
+    (all other flags are forwarded to the category runner script)
 
 
     standard flags:
@@ -153,30 +130,51 @@ EOF
       ;;
     *)
 
-      >&2 echo "${ScriptPathClr}: unrecognised argument '${SisClr_Red}${SisClr_Bold}$1${SisClr_None}'; use --help for usage"
-
-      exit 1
+      ForwardedArgs+=("$1")
       ;;
   esac
 
   shift
 done
 
+if [ $UnitOnly -ne 0 ] && [ $ComponentOnly -ne 0 ]; then
 
-# ##########################################################
-# main()
-
-if [ ! -d "$CMakeDir" ] || [ ! -f "$CMakeDir/CMakeCache.txt" ]; then
-
-  >&2 echo "${ScriptPathClr}: CMake build directory '${CMakeDirClr}' not found or not configured; nothing to clean"
+  >&2 echo "${ScriptPathClr}: ${SisClr_Red}${SisClr_Bold}--unit-only${SisClr_None} and ${SisClr_Red}${SisClr_Bold}--component-only${SisClr_None} are mutually exclusive"
 
   exit 1
 fi
 
-echo "Executing clean of ${ProjectNameClr} (via cmake --build --target clean)"
-sis_cmake_build clean
-exit $?
+
+# ##########################################################
+# main()
+
+status=0
+
+if [ $UnitOnly -ne 0 ]; then
+
+  "$Dir/run_all_unit_tests.sh" "${ForwardedArgs[@]}"
+  exit $?
+fi
+
+if [ $ComponentOnly -ne 0 ]; then
+
+  "$Dir/run_all_component_tests.sh" "${ForwardedArgs[@]}"
+  exit $?
+fi
+
+echo
+echo "Running all ${ProjectNameClr} automated test programs (unit and component)"
+
+"$Dir/run_all_unit_tests.sh" "${ForwardedArgs[@]}"
+status=$?
+
+if [ $status -eq 0 ]; then
+
+  "$Dir/run_all_component_tests.sh" "${ForwardedArgs[@]}"
+  status=$?
+fi
+
+exit $status
 
 
 # ############################## end of file ############################# #
-

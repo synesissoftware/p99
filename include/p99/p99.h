@@ -12,7 +12,7 @@
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
- * Updated: 4th August 2026
+ * Updated: 9th October 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems. Licensed under the 3-clause BSD License.
@@ -50,7 +50,7 @@
 #define P99_VER_MAJOR                                       0
 #define P99_VER_MINOR                                       3
 #define P99_VER_PATCH                                       0
-#define P99_VER_ALPHABETA                                   0x41
+#define P99_VER_ALPHABETA                                   0x81
 
 #define P99_VER \
     (0 \
@@ -60,7 +60,9 @@
         |   (   P99_VER_ALPHABETA  <<  0   ) \
     )
 
-#define P99_VER_REVISION                                    P99_VER_PATCH
+#ifndef P99_DOCUMENTATION_SKIP_SECTION
+# define P99_VER_REVISION                                   P99_VER_PATCH
+#endif /* !P99_DOCUMENTATION_SKIP_SECTION */
 
 #define P99_VER_STRINGIZE_(M, m, p)                         #M "." #m "." #p
 #define P99_VER_STRINGIZE(M, m, p)                          P99_VER_STRINGIZE_(M, m, p)

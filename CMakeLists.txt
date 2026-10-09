@@ -4,7 +4,7 @@
 # Purpose:  Top-level CMake lists file for p99
 #
 # Created:  4th July 2026
-# Updated:  4th August 2026
+# Updated:  8th October 2026
 #
 # Home:     https://github.com/synesissoftware/p99
 #
@@ -299,6 +299,8 @@ if(P99_BUILD_TESTS)
 	p99_link_bdut(p99_test_cxx)
 	add_test(NAME histogram_cpp COMMAND p99_test_cxx)
 	set_tests_properties(histogram_cpp PROPERTIES TIMEOUT 120)
+
+	add_subdirectory(test/scratch/versions)
 endif()
 
 # --- Examples --------------------------------------------------------------

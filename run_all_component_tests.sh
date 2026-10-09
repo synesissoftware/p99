@@ -29,7 +29,10 @@ ProjectName=$(tr -d '[:space:]' < "$ProjectNameFile")
 ScriptPath=$0
 
 AlwaysUseColours=${SIS_CMAKE_ALWAYS_USE_COLOURS:-${SIS_ALWAYS_USE_COLOURS:-0}}
+ListOnly=0
+RunMake=1
 SisUseColours=0
+Verbosity=${XTESTS_VERBOSITY:-${TEST_VERBOSITY:-3}}
 
 
 # ##########################################################
@@ -124,11 +127,29 @@ while [[ $# -gt 0 ]]; do
 
       # AlwaysUseColours=1 - this is handled by the for loop above
       ;;
+    --component-only)
+
+      # Benign: this script is already component-only (aggregate / CI may
+      # pass it)
+      ;;
+    --list-only|-l)
+
+      ListOnly=1
+      ;;
+    --no-make|-M)
+
+      RunMake=0
+      ;;
+    --verbosity)
+
+      shift
+      Verbosity=$1
+      ;;
     --help)
 
       [ -f "$Dir/.sis/script_info_lines.txt" ] && cat "$Dir/.sis/script_info_lines.txt"
       cat << EOF
-Cleans CMake-generated build artefacts via cmake --build --target clean
+Runs all (matching) component-test programs
 
 ${ScriptPath} [ ... flags/options ... ]
 
@@ -140,6 +161,21 @@ Flags/options:
     --always-use-colors
     --always-use-colours
         forces use of colours even when stdout is not a TTY
+
+    --component-only
+        accepted for compatibility; this script always runs component tests
+        only
+
+    -l
+    --list-only
+        lists the target programs but does not execute them
+
+    -M
+    --no-make
+        does not execute a build before running programs
+
+    --verbosity <verbosity>
+        specifies an explicit verbosity, forwarded to each program
 
 
     standard flags:
@@ -166,17 +202,99 @@ done
 # ##########################################################
 # main()
 
-if [ ! -d "$CMakeDir" ] || [ ! -f "$CMakeDir/CMakeCache.txt" ]; then
+status=0
 
-  >&2 echo "${ScriptPathClr}: CMake build directory '${CMakeDirClr}' not found or not configured; nothing to clean"
+if [ $RunMake -ne 0 ]; then
 
-  exit 1
+  if [ $ListOnly -eq 0 ]; then
+
+    echo
+    echo "Executing build of ${ProjectNameClr} (via cmake --build) and then running all component-test programs"
+
+    mkdir -p "$CMakeDir" || exit 1
+
+    if [ ! -f "$CMakeDir/CMakeCache.txt" ]; then
+
+      >&2 echo "${ScriptPathClr}: '${CMakeDirClr}' is not configured; use prepare_cmake.sh first"
+
+      exit 1
+    fi
+
+    sis_cmake_build
+    status=$?
+  fi
+else
+
+  if [ ! -d "$CMakeDir" ] || [ ! -f "$CMakeDir/CMakeCache.txt" ]; then
+
+    >&2 echo "${ScriptPathClr}: cannot run in '--no-make' mode without a previous successful configure/build"
+
+    exit 1
+  fi
 fi
 
-echo "Executing clean of ${ProjectNameClr} (via cmake --build --target clean)"
-sis_cmake_build clean
-exit $?
+if [ $status -eq 0 ]; then
+
+  if [ $ListOnly -ne 0 ]; then
+
+    echo
+    echo "Listing all ${ProjectNameClr} component-test programs"
+  else
+
+    echo
+    echo "Running all ${ProjectNameClr} component-test programs"
+  fi
+
+  NumPrograms=0
+
+  while IFS= read -r -d '' f; do
+
+    case "$f" in
+      *.pdb|*.ilk|*.log|*.obj|*.o)
+        continue
+        ;;
+    esac
+
+    NumPrograms=$((NumPrograms + 1))
+
+    fClr="${SisClr_Blue}${SisClr_Bold}${f}${SisClr_None}"
+
+    if [ $ListOnly -ne 0 ]; then
+
+      echo "would execute ${fClr}:"
+
+      continue
+    fi
+
+    if [ $Verbosity -ge 3 ]; then
+
+      echo
+    fi
+    if [ $Verbosity -ge 2 ]; then
+
+      echo "executing ${fClr}:"
+    fi
+
+    if "$f" --verbosity="$Verbosity"; then
+
+      :
+    else
+
+      status=$?
+
+      break 1
+    fi
+  done < <(find "$CMakeDir" -type f \( -name 'test_component*' -o -name 'test.component.*' \) \( -perm -100 -o -name '*.exe' \) -print0 2>/dev/null | sort -z)
+
+  if [ $NumPrograms -eq 0 ]; then
+
+    echo "${ScriptPathClr}: found no component-test programs under '${CMakeDirClr}' (none found)"
+
+    exit 0
+  fi
+fi
+
+exit $status
 
 
 # ############################## end of file ############################# #
-
