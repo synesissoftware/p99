@@ -1,0 +1,275 @@
+#
+# Created: 13th October 2026
+# Updated: 13th October 2026
+#
+
+name: CI cell
+
+on:
+  workflow_call:
+    inputs:
+      cell-id:
+        required: true
+        type: string
+      os:
+        required: true
+        type: string
+      c-compiler:
+        required: true
+        type: string
+      cpp-compiler:
+        required: true
+        type: string
+      build-type:
+        required: false
+        type: string
+        default: Release
+      toolchain:
+        required: false
+        type: string
+        default: ''
+      # Optional P99_COMPACT_HISTOGRAM (e.g. ON); empty keeps the default.
+      compact-histogram:
+        required: false
+        type: string
+        default: ''
+      run-benchmarks:
+        required: false
+        type: boolean
+        default: false
+      build-docs:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build (${{ inputs.cell-id }})
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Clang (Ubuntu)
+        if: runner.os == 'Linux' && inputs.c-compiler == 'clang'
+        run: sudo apt-get update && sudo apt-get install -y clang
+
+      - name: Setup MSYS2 MinGW
+        id: msys2
+        if: runner.os == 'Windows' && inputs.toolchain == 'mingw'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-cmake
+            mingw-w64-x86_64-make
+
+      # BDUT is QUIET/optional: bundled under
+      # include/bundled-software/bdut/, or BDUT_ROOT / find_package(BDUT).
+      # CI does not install-sis-deps BDUT; tests use the bundled headers
+      # unless an external root is supplied.
+
+      - name: Configure
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Empty "${array[@]}" trips set -u on macOS Bash 3.2; use the
+          # ${arr[@]+"${arr[@]}"} form so a missing compact override expands
+          # to nothing.
+          compact_args=()
+          if [ -n "${{ inputs.compact-histogram }}" ]; then
+            compact_args=(-DP99_COMPACT_HISTOGRAM="${{ inputs.compact-histogram }}")
+          fi
+          if [ "${{ inputs.c-compiler }}" = "cl" ]; then
+            cmake -B build -S . -A x64 \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              ${compact_args[@]+"${compact_args[@]}"}
+          elif [ "${{ inputs.toolchain }}" = "mingw" ]; then
+            export PATH="/mingw64/bin:$PATH"
+            cmake -B build -S . -G "MinGW Makefiles" \
+              -DCMAKE_BUILD_TYPE="${{ inputs.build-type }}" \
+              -DCMAKE_C_COMPILER=gcc \
+              -DCMAKE_CXX_COMPILER=g++ \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              ${compact_args[@]+"${compact_args[@]}"}
+          else
+            cmake -B build -S . \
+              -DCMAKE_BUILD_TYPE="${{ inputs.build-type }}" \
+              -DCMAKE_C_COMPILER="${{ inputs.c-compiler }}" \
+              -DCMAKE_CXX_COMPILER="${{ inputs.cpp-compiler }}" \
+              -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              ${compact_args[@]+"${compact_args[@]}"}
+          fi
+
+      - name: Build
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.toolchain }}" = "mingw" ]; then
+            export PATH="/mingw64/bin:$PATH"
+            cmake --build build --config "${{ inputs.build-type }}" --parallel 2
+          else
+            cmake --build build --config "${{ inputs.build-type }}" --parallel
+          fi
+
+      # Unit targets are p99_test / p99_test_cxx (not test.unit.*); CTest is
+      # the authoritative unit gate. run_all_unit_tests discovery would miss
+      # them.
+      - name: Test (CTest)
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.toolchain }}" = "mingw" ]; then
+            export PATH="/mingw64/bin:$PATH"
+          fi
+          ctest --test-dir build --output-on-failure \
+            --build-config "${{ inputs.build-type }}" --timeout 120
+
+      - name: Run benchmarks
+        if: inputs.run-benchmarks
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.toolchain }}" = "mingw" ]; then
+            export PATH="/mingw64/bin:$PATH"
+          fi
+          benchmark=""
+          for candidate in \
+            build/p99_benchmark \
+            build/p99_benchmark.exe \
+            build/Release/p99_benchmark.exe \
+            build/Debug/p99_benchmark.exe
+          do
+            if [ -f "$candidate" ]; then
+              benchmark="$candidate"
+              break
+            fi
+          done
+          if [ -z "$benchmark" ]; then
+            echo "p99_benchmark executable not found under build/" >&2
+            ls -la build/ >&2 || true
+            ls -la build/Release >&2 || true
+            exit 1
+          fi
+          "$benchmark"
+
+      - name: Install
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.toolchain }}" = "mingw" ]; then
+            export PATH="/mingw64/bin:$PATH"
+          fi
+          if [ "${{ inputs.c-compiler }}" = "cl" ]; then
+            cmake --install build --config "${{ inputs.build-type }}" \
+              --prefix "${{ runner.temp }}/install"
+          else
+            cmake --install build --prefix "${{ runner.temp }}/install"
+          fi
+
+      - name: Verify pkg-config file
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "${{ runner.temp }}/install/lib/pkgconfig/p99.pc" || \
+            test -f "${{ runner.temp }}/install/lib64/pkgconfig/p99.pc"
+
+      - name: Verify CMake package config
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "${{ runner.temp }}/install/lib/cmake/p99/p99Config.cmake" || \
+            test -f "${{ runner.temp }}/install/lib64/cmake/p99/p99Config.cmake"
+
+      - name: Build API documentation
+        if: inputs.build-docs
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y doxygen
+          cmake -B build-docs -DCMAKE_BUILD_TYPE=Release -DP99_BUILD_DOCS=ON
+          cmake --build build-docs --target p99_docs
+          test -f build-docs/docs/html/index.html
+
+      - name: Upload build tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: sis-build-${{ inputs.cell-id }}
+          path: build
+          retention-days: 1
+
+  # Windows cells dogfood the native .cmd runners (never the .sh); every
+  # other cell uses the Bash runners. download-artifact strips execute bits.
+  # Example binaries are build_histogram* (not example*); discovery finds
+  # none — unit coverage stays on CTest above. Scratch finds
+  # test.scratch.versions.
+  test-scratch:
+    name: Scratch tests (${{ inputs.cell-id }})
+    needs: build
+    runs-on: ${{ inputs.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup MSYS2 MinGW
+        id: msys2
+        if: runner.os == 'Windows' && inputs.toolchain == 'mingw'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: mingw-w64-x86_64-toolchain
+
+      - name: Download build tree
+        uses: actions/download-artifact@v4
+        with:
+          name: sis-build-${{ inputs.cell-id }}
+          path: build
+
+      # download-artifact does not restore Unix execute bits;
+      # run_all_*.sh discovery requires -perm -100 (or *.exe on Windows).
+      # Skip CMakeFiles and compiler deps — name globs also match
+      # e.g. test.unit.*.c.o.d / example*.cpp.o.d; chmod +x on those
+      # makes tip runners treat them as programs (exit 127).
+      - name: Restore execute bits on test and example binaries
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          find build -type f \
+            ! -path '*/CMakeFiles/*' \
+            ! -name '*.d' \
+            ! -name '*.o' \
+            ! -name '*.obj' \
+            \( \
+              -name 'test_unit*' -o -name 'test.unit.*' -o \
+              -name 'test_component*' -o -name 'test.component.*' -o \
+              -name 'test_performance*' -o -name 'test.performance.*' -o \
+              -name 'test_scratch*' -o -name 'test.scratch.*' -o \
+              \( -name 'example*' ! -name '*.md' \) \
+            \) -exec chmod +x {} +
+
+      - name: Run scratch tests (Bash)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          SIS_CMAKE_BUILD_DIR="${{ github.workspace }}/build" ./run_all_scratch_tests.sh -M
+
+      - name: Run scratch tests (native cmd)
+        if: runner.os == 'Windows'
+        shell: cmd
+        env:
+          MSYS2_LOCATION: ${{ steps.msys2.outputs.msys2-location }}
+          SIS_CMAKE_BUILD_DIR: ${{ github.workspace }}\build
+        run: |
+          if "${{ inputs.toolchain }}"=="mingw" set "PATH=%MSYS2_LOCATION%\mingw64\bin;%PATH%"
+          call run_all_scratch_tests.cmd
+          if errorlevel 1 exit /b 1

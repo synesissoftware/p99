@@ -1,6 +1,15 @@
 # p99 - Changes <!-- omit in toc -->
 
 
+## 0.3.0-beta2 - 13th October 2026
+
+* Renamed `P99_VER_ALPHABETA` to `P99_VER_RELSTATUS` (`0x82`); `P99_VER_ALPHABETA` remains a documentation-hidden alias of `P99_VER_RELSTATUS`;
+* Synced **clean_cmake.sh** and **remove_cmake_artefacts.sh** to **misc-dev-scripts** gold tip (**dfa6add**);
+* `PROGRAM_NAME` in **test/scratch/versions** is now `test.scratch.versions`;
+* Modular GitHub Actions — **ci.yml** + **ci-cell.yml**; scratch runners dogfood Bash / native **.cmd** with execute-bit restore after artifact download; **BDUT** remains bundled / optional (no **install-sis-deps**);
+* **NEWS.md** three-column chronology (**Details**); CI push branches extended to the canonical seven;
+
+
 ## 0.3.0-beta1 - 9th October 2026
 
 * promoted to beta — `P99_VER_ALPHABETA` is now `0x81`;
