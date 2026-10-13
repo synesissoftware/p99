@@ -78,6 +78,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Empty "${array[@]}" trips set -u on macOS Bash 3.2; use the
+          # ${arr[@]+"${arr[@]}"} form so a missing compact override expands
+          # to nothing.
           compact_args=()
           if [ -n "${{ inputs.compact-histogram }}" ]; then
             compact_args=(-DP99_COMPACT_HISTOGRAM="${{ inputs.compact-histogram }}")
@@ -85,7 +88,7 @@ jobs:
           if [ "${{ inputs.c-compiler }}" = "cl" ]; then
             cmake -B build -S . -A x64 \
               -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
-              "${compact_args[@]}"
+              ${compact_args[@]+"${compact_args[@]}"}
           elif [ "${{ inputs.toolchain }}" = "mingw" ]; then
             export PATH="/mingw64/bin:$PATH"
             cmake -B build -S . -G "MinGW Makefiles" \
@@ -93,14 +96,14 @@ jobs:
               -DCMAKE_C_COMPILER=gcc \
               -DCMAKE_CXX_COMPILER=g++ \
               -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
-              "${compact_args[@]}"
+              ${compact_args[@]+"${compact_args[@]}"}
           else
             cmake -B build -S . \
               -DCMAKE_BUILD_TYPE="${{ inputs.build-type }}" \
               -DCMAKE_C_COMPILER="${{ inputs.c-compiler }}" \
               -DCMAKE_CXX_COMPILER="${{ inputs.cpp-compiler }}" \
               -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
-              "${compact_args[@]}"
+              ${compact_args[@]+"${compact_args[@]}"}
           fi
 
       - name: Build
