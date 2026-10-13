@@ -111,7 +111,7 @@ before merge.
   require C99 `<stdbool.h>`;
 - Version bumps: update `P99_VER_*` in **include/p99/p99.h** only (CMake
   reads `P99_VER_MAJOR`, `P99_VER_MINOR`, and `P99_VER_PATCH` from there);
-  set `P99_VER_ALPHABETA` to `0xFF` for stable releases;
+  set `P99_VER_RELSTATUS` to `0xFF` for stable releases;
 
 
 ## Documentation
