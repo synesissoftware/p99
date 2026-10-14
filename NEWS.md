@@ -3,6 +3,7 @@
 
 | Date                | News Item                           | Details                                |
 | ------------------- | ----------------------------------- | -------------------------------------- |
+| 14th October 2026  | Release of [**p99** 0.3.0](https://github.com/synesissoftware/p99/releases/tag/0.3.0) | Tip helpers; release `P99_VER_RELSTATUS`; Phase **4c**; CI **install-sis-deps** |
 | 13th October 2026   | Release of [**p99** 0.3.0-beta2](https://github.com/synesissoftware/p99/releases/tag/0.3.0-beta2) | Modular CI; tip helpers; NEWS Details  |
 | 4th August 2026     | Release of [**p99** 0.2.1](https://github.com/synesissoftware/p99/releases/tag/0.2.1) | Bundled **BDUT**; optional `BDUT_ROOT` |
 | 4th August 2026     | Release of [**p99** 0.2.0](https://github.com/synesissoftware/p99/releases/tag/0.2.0) | C++ wrapper (`p99::histogram`)         |

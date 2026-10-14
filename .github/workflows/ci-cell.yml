@@ -69,10 +69,19 @@ jobs:
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
 
-      # BDUT is QUIET/optional: bundled under
-      # include/bundled-software/bdut/, or BDUT_ROOT / find_package(BDUT).
-      # CI does not install-sis-deps BDUT; tests use the bundled headers
-      # unless an external root is supplied.
+      # BDUT is QUIET/optional: bundled under include/bundled-software/bdut/,
+      # or BDUT_ROOT / find_package(BDUT). Prefer an installed package from
+      # install-sis-deps when present.
+      # Dependency order is deliberate (not lexicographic): each package
+      # configures against those already installed in the shared prefix.
+      - name: Install SIS dependencies
+        uses: ./.github/actions/install-sis-deps
+        with:
+          build-type: ${{ inputs.build-type }}
+          c-compiler: ${{ inputs.c-compiler == 'mingw' && 'gcc' || inputs.c-compiler }}
+          cpp-compiler: ${{ inputs.c-compiler == 'mingw' && 'g++' || inputs.cpp-compiler }}
+          dependencies: BDUT
+          toolchain: ${{ inputs.c-compiler == 'mingw' && 'mingw' || '' }}
 
       - name: Configure
         shell: bash
@@ -88,6 +97,7 @@ jobs:
           if [ "${{ inputs.c-compiler }}" = "cl" ]; then
             cmake -B build -S . -A x64 \
               -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              -DCMAKE_PREFIX_PATH="${{ env.SIS_DEPS }}" \
               ${compact_args[@]+"${compact_args[@]}"}
           elif [ "${{ inputs.toolchain }}" = "mingw" ]; then
             export PATH="/mingw64/bin:$PATH"
@@ -96,6 +106,7 @@ jobs:
               -DCMAKE_C_COMPILER=gcc \
               -DCMAKE_CXX_COMPILER=g++ \
               -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              -DCMAKE_PREFIX_PATH="${{ env.SIS_DEPS }}" \
               ${compact_args[@]+"${compact_args[@]}"}
           else
             cmake -B build -S . \
@@ -103,6 +114,7 @@ jobs:
               -DCMAKE_C_COMPILER="${{ inputs.c-compiler }}" \
               -DCMAKE_CXX_COMPILER="${{ inputs.cpp-compiler }}" \
               -DCMAKE_INSTALL_PREFIX="${{ runner.temp }}/install" \
+              -DCMAKE_PREFIX_PATH="${{ env.SIS_DEPS }}" \
               ${compact_args[@]+"${compact_args[@]}"}
           fi
 
