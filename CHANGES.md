@@ -1,6 +1,14 @@
 # p99 - Changes <!-- omit in toc -->
 
 
+## 0.3.0 - 14th October 2026
+
+* Synced tip **cmake-helpers** runners;
+* Promoted `P99_VER_RELSTATUS` to release status `0xFF`;
+* Phase **4c** polish: `PROGRAM_NAME` **test.scratch.versions**;
+* CI hygiene: **install-sis-deps** wiring and execute-bit exclusion form;
+
+
 ## 0.3.0-beta2 - 13th October 2026
 
 * Renamed `P99_VER_ALPHABETA` to `P99_VER_RELSTATUS` (`0x82`); `P99_VER_ALPHABETA` remains a documentation-hidden alias of `P99_VER_RELSTATUS`;
