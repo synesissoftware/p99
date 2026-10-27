@@ -4,10 +4,6 @@ add_executable(test.scratch.versions
 
 p99_configure_cxx_consumer(test.scratch.versions)
 
-if(TARGET BDUT::BDUT)
-
-	target_link_libraries(test.scratch.versions
-		PRIVATE
-			BDUT::BDUT
-	)
-endif()
+# Same attachment as the unit tests: installed BDUT::BDUT, or the bundled
+# include/ when the package is absent. HAS_BDUT is defined in either case.
+p99_link_bdut(test.scratch.versions)
