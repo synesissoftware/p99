@@ -1,6 +1,10 @@
 
 #include <p99/p99.h>
 
+#ifdef HAS_BDUT
+# include <bdut/bdut.h>
+#endif
+
 #include <iomanip>
 #include <iostream>
 
@@ -45,11 +49,27 @@ version(
 
 int main(int /* argc */, char* /* argv */[])
 {
+    int efferents_count = 0;
+
     {
         unsigned const libver = P99_VER;
 
         version(std::cout, "", "p99", "P99_VER", libver);
     }
+
+#ifdef HAS_BDUT
+
+    if (0 == efferents_count++)
+    {
+        std::cout << "\n" << "efferent dependencies:" << std::endl;
+    }
+
+    {
+        unsigned const libver = BDUT_VER;
+
+        version(std::cout, "\t", "BDUT", "BDUT_VER", libver);
+    }
+#endif
 
     return EXIT_SUCCESS;
 }
