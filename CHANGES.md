@@ -1,6 +1,11 @@
 # p99 - Changes <!-- omit in toc -->
 
 
+## 0.3.1 - 27th October 2026
+
+* Defined `HAS_BDUT` when **BDUT** is acquired for tests;
+
+
 ## 0.3.0 - 14th October 2026
 
 * Synced tip **cmake-helpers** runners;

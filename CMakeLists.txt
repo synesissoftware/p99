@@ -4,7 +4,7 @@
 # Purpose:  Top-level CMake lists file for p99
 #
 # Created:  4th July 2026
-# Updated:  8th October 2026
+# Updated:  27th October 2026
 #
 # Home:     https://github.com/synesissoftware/p99
 #
@@ -268,6 +268,8 @@ if(P99_BUILD_TESTS)
 			)
 		endif()
 	endif()
+
+	add_compile_definitions(HAS_BDUT)
 
 	function(p99_link_bdut target)
 
