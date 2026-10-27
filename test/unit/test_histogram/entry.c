@@ -5,7 +5,7 @@
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
- * Updated: 9th October 2026
+ * Updated: 27th October 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
@@ -101,11 +101,11 @@ TEST(VERSION)
 {
     ASSERT_EQ_SIZE(0, P99_VER_MAJOR);
     ASSERT_EQ_SIZE(3, P99_VER_MINOR);
-    ASSERT_EQ_SIZE(0, P99_VER_PATCH);
+    ASSERT_EQ_SIZE(1, P99_VER_PATCH);
     ASSERT_EQ_SIZE(P99_VER_PATCH, P99_VER_REVISION);
     ASSERT_EQ_SIZE(0xFF, P99_VER_RELSTATUS);
     ASSERT_EQ_SIZE(P99_VER_RELSTATUS, P99_VER_ALPHABETA);
-    ASSERT_EQ_SIZE(0x000300FF, P99_VER);
+    ASSERT_EQ_SIZE(0x000301FF, P99_VER);
 }
 
 TEST(histogram_STRUCT_SIZE)
