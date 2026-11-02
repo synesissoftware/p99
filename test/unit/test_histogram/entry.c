@@ -5,7 +5,7 @@
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
- * Updated: 27th October 2026
+ * Updated: 3rd November 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
@@ -16,24 +16,21 @@
 
 #include <bdut/bdut.h>
 
-#include <math.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 /* --- Test harness (BDUT shims) ---------------------------------------- */
 
-#define TEST(fn)                                                            \
-                                                                            \
-    static void TEST_##fn(void);                                            \
-    static void RUN_TEST_##fn(void)                                         \
-    {                                                                       \
-        printf("  %s ... ", #fn);                                           \
-        fflush(stdout);                                                     \
-        TEST_##fn();                                                        \
-        printf("ok\n");                                                     \
-    }                                                                       \
+#define TEST(fn)                                            \
+                                                            \
+    static void TEST_##fn(void);                            \
+    static void RUN_TEST_##fn(void)                         \
+    {                                                       \
+        printf("  %s ... ", #fn);                           \
+        fflush(stdout);                                     \
+        TEST_##fn();                                        \
+        printf("ok\n");                                     \
+    }                                                       \
     static void TEST_##fn(void)
 
 #define ASSERT_TRUE(cond)                                   BDUT_ASSERT_TRUE(cond)
@@ -41,58 +38,16 @@
 #define ASSERT_EQ_U64(expected, actual)                     BDUT_ASSERT_EQ((expected), (actual))
 #define ASSERT_EQ_SIZE(expected, actual)                    BDUT_ASSERT_EQ((expected), (actual))
 #define ASSERT_LE_SIZE(expected, actual)                    BDUT_ASSERT_LE((expected), (actual))
+#define ASSERT_NE(expected, actual)                         BDUT_ASSERT_NE((expected), (actual))
 
-/* Approximate equality is not provided by BDUT. */
+/* lhs <= rhs. BDUT_ASSERT_LE argument order is reversed. */
+#define ASSERT_LE(lhs, rhs)                                 BDUT_ASSERT_LE((rhs), (lhs))
 
-static void
-assert_eq_approx_u64(
-    uint64_t expected
-,   uint64_t actual
-,   double tolerance_fraction
-,   char const* file
-,   int line
-,   char const* func
-,   char const* expected_comparand_string
-,   char const* actual_comparand_string
-)
-{
-    double const diff = fabs((double)actual - (double)expected);
-    double const tolerance = fabs((double)expected * tolerance_fraction);
+/* lhs >= rhs. BDUT_ASSERT_GE argument order is reversed. */
+#define ASSERT_GE(lhs, rhs)                                 BDUT_ASSERT_GE((rhs), (lhs))
 
-    if (diff > tolerance && diff > 1.0)
-    {
-        fprintf(
-            stderr
-        ,   "\n  %s:%d:%s: ASSERTION FAILED: (%s) ~= (%s)\n"
-                "    expected: %llu\n"
-                "    actual:   %llu\n"
-                "    tolerance: %g\n"
-        ,   file
-        ,   line
-        ,   func
-        ,   expected_comparand_string
-        ,   actual_comparand_string
-        ,   (unsigned long long)expected
-        ,   (unsigned long long)actual
-        ,   tolerance
-        );
-
-        exit(EXIT_FAILURE);
-    }
-}
-
-#define ASSERT_EQ_APPROX_U64(expected, actual, tolerance)                   \
-                                                                            \
-    assert_eq_approx_u64(                                                   \
-        (uint64_t)(expected)                                                \
-    ,   (uint64_t)(actual)                                                  \
-    ,   (double)(tolerance)                                                 \
-    ,   __FILE__                                                            \
-    ,   __LINE__                                                            \
-    ,   __func__                                                            \
-    ,   #expected                                                           \
-    ,   #actual                                                             \
-    )
+/* Relative tolerance via BDUT approximate equality. */
+#define ASSERT_EQ_APPROX_U64(expected, actual, tolerance)   BDUT_ASSERT_FP_EQ_MULTIPLIER((expected), (actual), (tolerance))
 
 
 /* --- Tests ------------------------------------------------------------ */
@@ -101,11 +56,11 @@ TEST(VERSION)
 {
     ASSERT_EQ_SIZE(0, P99_VER_MAJOR);
     ASSERT_EQ_SIZE(3, P99_VER_MINOR);
-    ASSERT_EQ_SIZE(1, P99_VER_PATCH);
+    ASSERT_EQ_SIZE(2, P99_VER_PATCH);
     ASSERT_EQ_SIZE(P99_VER_PATCH, P99_VER_REVISION);
     ASSERT_EQ_SIZE(0xFF, P99_VER_RELSTATUS);
     ASSERT_EQ_SIZE(P99_VER_RELSTATUS, P99_VER_ALPHABETA);
-    ASSERT_EQ_SIZE(0x000301FF, P99_VER);
+    ASSERT_EQ_SIZE(0x000302FF, P99_VER);
 }
 
 TEST(histogram_STRUCT_SIZE)
@@ -328,8 +283,10 @@ TEST(histogram_PERCENTILES_INTERPOLATION)
     ASSERT_TRUE(p99_histogram_value_at_percentile(&h, 50.0, &p50));
     ASSERT_TRUE(p99_histogram_value_at_percentile(&h, 99.0, &p99));
 
-    ASSERT_TRUE(p50 >= 100 && p50 <= 200);
-    ASSERT_TRUE(p99 >= 100 && p99 <= 200);
+    ASSERT_GE(p50, 100);
+    ASSERT_LE(p50, 200);
+    ASSERT_GE(p99, 100);
+    ASSERT_LE(p99, 200);
 
     ASSERT_TRUE(p99_histogram_value_at_percentile(&h, 0.0, &value));
     ASSERT_EQ_U64(100, value);
@@ -337,9 +294,9 @@ TEST(histogram_PERCENTILES_INTERPOLATION)
     ASSERT_EQ_U64(200, value);
 
     ASSERT_TRUE(p99_histogram_value_at_p50(&h, &value));
-    ASSERT_TRUE(value >= 100);
+    ASSERT_GE(value, 100);
     ASSERT_TRUE(p99_histogram_value_at_p99(&h, &value));
-    ASSERT_TRUE(value <= 200);
+    ASSERT_LE(value, 200);
 }
 
 TEST(histogram_PERCENTILES_WIDE_RANGE)
@@ -397,18 +354,18 @@ TEST(histogram_PERCENTILES_WIDE_RANGE)
     ASSERT_TRUE(p99_histogram_value_at_p99_999(&h, &p99_999));
     ASSERT_TRUE(p99_histogram_value_at_p99_999_9(&h, &p99_999_9));
 
-    ASSERT_TRUE(p50 <= p75);
-    ASSERT_TRUE(p75 <= p90);
-    ASSERT_TRUE(p90 <= p95);
-    ASSERT_TRUE(p95 <= p99);
-    ASSERT_TRUE(p99 <= p99_5);
-    ASSERT_TRUE(p99_5 <= p99_9);
-    ASSERT_TRUE(p99_9 <= p99_99);
-    ASSERT_TRUE(p99_99 <= p99_999);
-    ASSERT_TRUE(p99_999 <= p99_999_9);
+    ASSERT_LE(p50, p75);
+    ASSERT_LE(p75, p90);
+    ASSERT_LE(p90, p95);
+    ASSERT_LE(p95, p99);
+    ASSERT_LE(p99, p99_5);
+    ASSERT_LE(p99_5, p99_9);
+    ASSERT_LE(p99_9, p99_99);
+    ASSERT_LE(p99_99, p99_999);
+    ASSERT_LE(p99_999, p99_999_9);
 
-    ASSERT_TRUE(p50 >= 1);
-    ASSERT_TRUE(p99_999_9 <= 10000000000ull);
+    ASSERT_GE(p50, 1);
+    ASSERT_LE(p99_999_9, 10000000000ull);
 }
 
 TEST(histogram_PERCENTILES_MANY_EVENTS)
@@ -458,15 +415,15 @@ TEST(histogram_PERCENTILES_MANY_EVENTS)
     ASSERT_TRUE(p99_histogram_value_at_p99_999(&h, &p99_999));
     ASSERT_TRUE(p99_histogram_value_at_p99_999_9(&h, &p99_999_9));
 
-    ASSERT_TRUE(p50 <= p75);
-    ASSERT_TRUE(p75 <= p90);
-    ASSERT_TRUE(p90 <= p95);
-    ASSERT_TRUE(p95 <= p99);
-    ASSERT_TRUE(p99 <= p99_5);
-    ASSERT_TRUE(p99_5 <= p99_9);
-    ASSERT_TRUE(p99_9 <= p99_99);
-    ASSERT_TRUE(p99_99 <= p99_999);
-    ASSERT_TRUE(p99_999 <= p99_999_9);
+    ASSERT_LE(p50, p75);
+    ASSERT_LE(p75, p90);
+    ASSERT_LE(p90, p95);
+    ASSERT_LE(p95, p99);
+    ASSERT_LE(p99, p99_5);
+    ASSERT_LE(p99_5, p99_9);
+    ASSERT_LE(p99_9, p99_99);
+    ASSERT_LE(p99_99, p99_999);
+    ASSERT_LE(p99_999, p99_999_9);
 }
 
 TEST(histogram_COMPARE_FLOAT_AND_INT_PERCENTILES)
@@ -673,7 +630,7 @@ TEST(histogram_VALUES_AT_PERCENTILES_NON_MONOTONIC)
     ASSERT_EQ_U64(p99_value, elements[0].value);
     ASSERT_EQ_U64(p99_value, elements[1].value);
     ASSERT_EQ_U64(p99_value, elements[2].value);
-    ASSERT_TRUE(elements[1].value != p75_value);
+    ASSERT_NE(p75_value, elements[1].value);
 }
 
 TEST(histogram_VALUES_AT_FIXED_PERCENTILES_BATCH)
@@ -737,21 +694,21 @@ TEST(histogram_VALUES_AT_FIXED_PERCENTILES_BATCH)
     ASSERT_EQ_U64(p99_999, batch.values[8]);
     ASSERT_EQ_U64(p99_999_9, batch.values[9]);
 
-    ASSERT_TRUE(batch.values[0] <= batch.values[1]);
-    ASSERT_TRUE(batch.values[1] <= batch.values[2]);
-    ASSERT_TRUE(batch.values[2] <= batch.values[3]);
-    ASSERT_TRUE(batch.values[3] <= batch.values[4]);
-    ASSERT_TRUE(batch.values[4] <= batch.values[5]);
-    ASSERT_TRUE(batch.values[5] <= batch.values[6]);
-    ASSERT_TRUE(batch.values[6] <= batch.values[7]);
-    ASSERT_TRUE(batch.values[7] <= batch.values[8]);
-    ASSERT_TRUE(batch.values[8] <= batch.values[9]);
+    ASSERT_LE(batch.values[0], batch.values[1]);
+    ASSERT_LE(batch.values[1], batch.values[2]);
+    ASSERT_LE(batch.values[2], batch.values[3]);
+    ASSERT_LE(batch.values[3], batch.values[4]);
+    ASSERT_LE(batch.values[4], batch.values[5]);
+    ASSERT_LE(batch.values[5], batch.values[6]);
+    ASSERT_LE(batch.values[6], batch.values[7]);
+    ASSERT_LE(batch.values[7], batch.values[8]);
+    ASSERT_LE(batch.values[8], batch.values[9]);
 }
 
 /* --- Main ------------------------------------------------------------- */
 
 int
-main(int argc, char** argv)
+main(int argc, char* argv[])
 {
     printf("p99 histogram tests\n");
 

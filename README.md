@@ -487,9 +487,9 @@ public header (`stddef.h`, `stdint.h`).
 
 #### Development Dependencies
 
-* [**BDUT**](https://github.com/synesissoftware/BDUT) — bundled under
-  **include/bundled-software/bdut/** for unit tests; override with
-  `BDUT_ROOT` or an installed `find_package(BDUT)` package
+* [**BDUT**](https://github.com/synesissoftware/BDUT) **0.6.0-beta1** —
+  bundled under **include/bundled-software/bdut/** for unit tests; override
+  with `BDUT_ROOT` or an installed `find_package(BDUT)` package
 
 
 ### License
