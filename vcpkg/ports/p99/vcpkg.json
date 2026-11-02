@@ -1,6 +1,6 @@
 {
   "name": "p99",
-  "version": "0.1.0",
+  "version": "0.3.2",
   "description": "Low-cost generation of performance percentiles (p50, p90, p99, etc.)",
   "homepage": "https://github.com/synesissoftware/p99",
   "license": "BSD-3-Clause",
