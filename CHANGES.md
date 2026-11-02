@@ -5,6 +5,7 @@
 
 * Replaced bundled **BDUT** **0.4.2** with **0.6.0-beta1** (**include/bundled-software/bdut/bdut.h**);
 * Unit tests — `BDUT_ASSERT_FP_EQ_MULTIPLIER` replaces the hand-rolled approximate `uint64_t` check (that helper also accepted an absolute difference of at most 1); ordering and equality checks that were hidden inside `BDUT_ASSERT_TRUE` now use `BDUT_ASSERT_EQ`, `BDUT_ASSERT_GE`, `BDUT_ASSERT_LE`, and `BDUT_ASSERT_NE`, so failure reports include the expected and actual values;
+* An installed **BDUT** older than the bundled header is ignored; comparison shims cast both sides to `uint64_t` so `-Werror=sign-compare` stays clean;
 
 
 ## 0.3.1 - 27th October 2026

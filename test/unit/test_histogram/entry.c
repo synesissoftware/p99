@@ -35,16 +35,20 @@
 
 #define ASSERT_TRUE(cond)                                   BDUT_ASSERT_TRUE(cond)
 #define ASSERT_FALSE(cond)                                  BDUT_ASSERT_FALSE(cond)
-#define ASSERT_EQ_U64(expected, actual)                     BDUT_ASSERT_EQ((expected), (actual))
-#define ASSERT_EQ_SIZE(expected, actual)                    BDUT_ASSERT_EQ((expected), (actual))
-#define ASSERT_LE_SIZE(expected, actual)                    BDUT_ASSERT_LE((expected), (actual))
-#define ASSERT_NE(expected, actual)                         BDUT_ASSERT_NE((expected), (actual))
+
+/* Cast both sides so BDUT's typed compare does not mix a signed literal
+ * with uint64_t / size_t under -Werror=sign-compare.
+ */
+#define ASSERT_EQ_U64(expected, actual)                     BDUT_ASSERT_EQ((uint64_t)(expected), (uint64_t)(actual))
+#define ASSERT_EQ_SIZE(expected, actual)                    BDUT_ASSERT_EQ((uint64_t)(expected), (uint64_t)(actual))
+#define ASSERT_LE_SIZE(expected, actual)                    BDUT_ASSERT_LE((uint64_t)(expected), (uint64_t)(actual))
+#define ASSERT_NE(expected, actual)                         BDUT_ASSERT_NE((uint64_t)(expected), (uint64_t)(actual))
 
 /* lhs <= rhs. BDUT_ASSERT_LE argument order is reversed. */
-#define ASSERT_LE(lhs, rhs)                                 BDUT_ASSERT_LE((rhs), (lhs))
+#define ASSERT_LE(lhs, rhs)                                 BDUT_ASSERT_LE((uint64_t)(rhs), (uint64_t)(lhs))
 
 /* lhs >= rhs. BDUT_ASSERT_GE argument order is reversed. */
-#define ASSERT_GE(lhs, rhs)                                 BDUT_ASSERT_GE((rhs), (lhs))
+#define ASSERT_GE(lhs, rhs)                                 BDUT_ASSERT_GE((uint64_t)(rhs), (uint64_t)(lhs))
 
 /* Relative tolerance via BDUT approximate equality. */
 #define ASSERT_EQ_APPROX_U64(expected, actual, tolerance)   BDUT_ASSERT_FP_EQ_MULTIPLIER((expected), (actual), (tolerance))
