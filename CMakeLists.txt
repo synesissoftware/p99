@@ -402,17 +402,13 @@ if(P99_BUILD_DOCS)
 
 	find_package(Doxygen REQUIRED)
 
-	set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/docs")
-
-	configure_file(
-		"${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
-		"${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
-		@ONLY
-	)
-
+	# generate_doxygen.sh reads Doxyfile, overrides PROJECT_NUMBER from
+	# include/p99/p99.h, and writes <SIS_CMAKE_BUILD_DIR>/doxygen/html/.
 	add_custom_target(p99_docs
-		COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_BINARY_DIR}/Doxyfile"
-		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E env
+			SIS_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}
+			${CMAKE_CURRENT_SOURCE_DIR}/generate_doxygen.sh
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMENT "Generating p99 API documentation (Doxygen)"
 		VERBATIM
 	)

@@ -1,6 +1,6 @@
 #
 # Created: 13th October 2026
-# Updated: 13th October 2026
+# Updated: 3rd November 2026
 #
 
 name: CI cell
@@ -206,9 +206,8 @@ jobs:
           set -euo pipefail
           sudo apt-get update
           sudo apt-get install -y doxygen
-          cmake -B build-docs -DCMAKE_BUILD_TYPE=Release -DP99_BUILD_DOCS=ON
-          cmake --build build-docs --target p99_docs
-          test -f build-docs/docs/html/index.html
+          ./generate_doxygen.sh
+          test -f _build/doxygen/html/index.html
 
       - name: Upload build tree
         uses: actions/upload-artifact@v4

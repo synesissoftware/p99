@@ -445,13 +445,14 @@ HTML reference for the public C API (`include/p99/p99.h`) is generated with
 [Doxygen](https://www.doxygen.org/):
 
 ```bash
-cmake -B build -DP99_BUILD_DOCS=ON
-cmake --build build --target p99_docs
-open build/docs/html/index.html
+./generate_doxygen.sh
+open _build/doxygen/html/index.html
 ```
 
-Requires Doxygen on `PATH` (`find_package(Doxygen)`). Documentation is not
-installed; it is for local development and release publishing.
+The same generator is the CMake target `p99_docs` (`-DP99_BUILD_DOCS=ON`),
+which writes `build/doxygen/html/` when the build directory is `build`.
+Requires Doxygen on `PATH`. Documentation is not installed; it is for local
+development and release publishing.
 
 
 ## Project Information
