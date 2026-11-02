@@ -129,15 +129,16 @@ typedef int p99_truthy_t;
  * performance costs by reduing the number of cache line misses; the cost is
  * in resolution, but for many use cases this is acceptable.
  */
-#ifdef DOXYGEN
-# define P99_COMPACT_HISTOGRAM
-# undef P99_COMPACT_HISTOGRAM
-#endif
-#ifdef P99_COMPACT_HISTOGRAM
+#ifndef P99_DOCUMENTATION_SKIP_SECTION
+# ifdef P99_COMPACT_HISTOGRAM
 typedef uint32_t                                            p99_bucket_count_t;
-#else
+# else
 typedef uint64_t                                            p99_bucket_count_t;
-#endif
+# endif
+#else
+# define P99_COMPACT_HISTOGRAM
+typedef uint64_t                                            p99_bucket_count_t;
+#endif /* !P99_DOCUMENTATION_SKIP_SECTION */
 
 /** Number of logarithmic buckets in a histogram. */
 #define P99_BUCKET_COUNT                                    (64)

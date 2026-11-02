@@ -4,6 +4,7 @@
 ## 0.3.2 - 3rd November 2026
 
 * Replaced bundled **BDUT** **0.4.2** with **0.6.0-beta1** (**include/bundled-software/bdut/bdut.h**);
+* **Doxyfile** and **generate_doxygen.sh** document `include/p99/p99.h` and `include/p99/p99.hpp`; `p99_docs` and the CI docs step run that script;
 * Unit tests — `BDUT_ASSERT_FP_EQ_MULTIPLIER` replaces the hand-rolled approximate `uint64_t` check (that helper also accepted an absolute difference of at most 1); ordering and equality checks that were hidden inside `BDUT_ASSERT_TRUE` now use `BDUT_ASSERT_EQ`, `BDUT_ASSERT_GE`, `BDUT_ASSERT_LE`, and `BDUT_ASSERT_NE`, so failure reports include the expected and actual values;
 
 
