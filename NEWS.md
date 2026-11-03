@@ -3,6 +3,7 @@
 
 | Date                | News Item                           | Details                                |
 | ------------------- | ----------------------------------- | -------------------------------------- |
+| 3rd November 2026   | Release of [**p99** 0.3.2](https://github.com/synesissoftware/p99/releases/tag/0.3.2) | Doxygen via **generate_doxygen.sh**; Bundled **BDUT** **0.6.0-beta1**; tests use `BDUT_ASSERT_FP_EQ_MULTIPLIER` |
 | 27th October 2026  | Release of [p99 0.3.1](https://github.com/synesissoftware/p99/releases/tag/0.3.1) | `HAS_BDUT` when **BDUT** is acquired for tests |
 | 14th October 2026  | Release of [**p99** 0.3.0](https://github.com/synesissoftware/p99/releases/tag/0.3.0) | Tip helpers; release `P99_VER_RELSTATUS`; Phase **4c**; CI **install-sis-deps** |
 | 13th October 2026   | Release of [**p99** 0.3.0-beta2](https://github.com/synesissoftware/p99/releases/tag/0.3.0-beta2) | Modular CI; tip helpers; NEWS Details  |

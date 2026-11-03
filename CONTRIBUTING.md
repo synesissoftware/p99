@@ -57,8 +57,8 @@ Licensing: contributions are accepted under the same
 ## Development setup
 
 **p99** has no third-party runtime dependencies. Unit tests use bundled
-**BDUT** (or an external tree via `BDUT_ROOT` / `./prepare_cmake.sh
---bdut-root-dir`). To configure, build, and test:
+**BDUT** **0.6.0-beta1** (or an external tree via `BDUT_ROOT` /
+`./prepare_cmake.sh --bdut-root-dir`). To configure, build, and test:
 
 ```bash
 ./prepare_cmake.sh -m

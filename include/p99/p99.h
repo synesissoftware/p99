@@ -12,7 +12,7 @@
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
- * Updated: 27th October 2026
+ * Updated: 3rd November 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems. Licensed under the 3-clause BSD License.
@@ -49,7 +49,7 @@
 
 #define P99_VER_MAJOR                                       0
 #define P99_VER_MINOR                                       3
-#define P99_VER_PATCH                                       1
+#define P99_VER_PATCH                                       2
 #define P99_VER_RELSTATUS                                   0xFF
 
 #define P99_VER \
@@ -129,15 +129,16 @@ typedef int p99_truthy_t;
  * performance costs by reduing the number of cache line misses; the cost is
  * in resolution, but for many use cases this is acceptable.
  */
-#ifdef DOXYGEN
-# define P99_COMPACT_HISTOGRAM
-# undef P99_COMPACT_HISTOGRAM
-#endif
-#ifdef P99_COMPACT_HISTOGRAM
+#ifndef P99_DOCUMENTATION_SKIP_SECTION
+# ifdef P99_COMPACT_HISTOGRAM
 typedef uint32_t                                            p99_bucket_count_t;
-#else
+# else
 typedef uint64_t                                            p99_bucket_count_t;
-#endif
+# endif
+#else
+# define P99_COMPACT_HISTOGRAM
+typedef uint64_t                                            p99_bucket_count_t;
+#endif /* !P99_DOCUMENTATION_SKIP_SECTION */
 
 /** Number of logarithmic buckets in a histogram. */
 #define P99_BUCKET_COUNT                                    (64)

@@ -5,7 +5,7 @@
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 4th July 2026
- * Updated: 4th August 2026
+ * Updated: 3rd November 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems
@@ -35,6 +35,7 @@
     static void fn()
 
 #define ASSERT(cond)                                        BDUT_ASSERT_TRUE(cond)
+#define ASSERT_EQ(expected, actual)                         BDUT_ASSERT_EQ((expected), (actual))
 
 /* --- Tests ------------------------------------------------------------ */
 
@@ -43,7 +44,7 @@ TEST(test_cpp_histogram_empty)
     p99::histogram histogram;
 
     ASSERT(histogram.empty());
-    ASSERT(0 == histogram.event_count());
+    ASSERT_EQ(0u, histogram.event_count());
 }
 
 TEST(test_cpp_histogram_push_and_min_max)
@@ -55,11 +56,11 @@ TEST(test_cpp_histogram_push_and_min_max)
     ASSERT(histogram.push_ns(100));
     ASSERT(histogram.push_us(2));
     ASSERT(!histogram.empty());
-    ASSERT(2 == histogram.event_count());
+    ASSERT_EQ(2u, histogram.event_count());
     ASSERT(histogram.try_get_min_event_time(&min));
-    ASSERT(100 == min);
+    ASSERT_EQ(100u, min);
     ASSERT(histogram.try_get_max_event_time(&max));
-    ASSERT(2000 == max);
+    ASSERT_EQ(2000u, max);
 }
 
 TEST(test_cpp_histogram_push_duration)
@@ -70,7 +71,7 @@ TEST(test_cpp_histogram_push_duration)
 #if __cplusplus >= 201103L
     ASSERT(histogram.push_duration(std::chrono::milliseconds(3)));
     ASSERT(histogram.try_get_value_at_p50(&value));
-    ASSERT(3000000 == value);
+    ASSERT_EQ(3000000u, value);
 #else
     (void)value;
 #endif
@@ -81,8 +82,8 @@ TEST(test_cpp_histogram_bucket_access)
     p99::histogram histogram;
 
     ASSERT(histogram.push_ns(1));
-    ASSERT(1 == histogram[0]);
-    ASSERT(1 == histogram.at(0));
+    ASSERT_EQ(1u, histogram[0]);
+    ASSERT_EQ(1u, histogram.at(0));
 
     bool threw = false;
 
@@ -104,15 +105,21 @@ TEST(test_cpp_histogram_optional_min_max)
 {
     p99::histogram histogram;
 
-    ASSERT(!histogram.get_min_event_time().has_value());
-    ASSERT(!histogram.get_max_event_time().has_value());
+    std::optional<uint64_t> const empty_min = histogram.get_min_event_time();
+    std::optional<uint64_t> const empty_max = histogram.get_max_event_time();
+
+    ASSERT(!empty_min.has_value());
+    ASSERT(!empty_max.has_value());
 
     ASSERT(histogram.push_ns(42));
 
-    ASSERT(histogram.get_min_event_time().has_value());
-    ASSERT(42 == *histogram.get_min_event_time());
-    ASSERT(histogram.get_max_event_time().has_value());
-    ASSERT(42 == *histogram.get_max_event_time());
+    std::optional<uint64_t> const min_time = histogram.get_min_event_time();
+    std::optional<uint64_t> const max_time = histogram.get_max_event_time();
+
+    ASSERT(min_time.has_value());
+    ASSERT_EQ(42u, *min_time);
+    ASSERT(max_time.has_value());
+    ASSERT_EQ(42u, *max_time);
 }
 
 #endif
@@ -127,8 +134,8 @@ TEST(test_cpp_histogram_buckets_span)
 
     std::span<p99_bucket_count_t const> const buckets = histogram.buckets();
 
-    ASSERT(P99_BUCKET_COUNT == buckets.size());
-    ASSERT(1 == buckets[2]);
+    ASSERT_EQ(std::size_t{P99_BUCKET_COUNT}, buckets.size());
+    ASSERT_EQ(1u, buckets[2]);
 }
 
 #endif
@@ -144,12 +151,12 @@ TEST(test_cpp_histogram_clear)
 
 TEST(test_cpp_histogram_struct_size)
 {
-    ASSERT(sizeof(p99::histogram) == sizeof(p99_histogram_t));
+    ASSERT_EQ(sizeof(p99_histogram_t), sizeof(p99::histogram));
 }
 
 /* --- Main ------------------------------------------------------------- */
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
     printf("p99 C++ histogram tests\n");
 

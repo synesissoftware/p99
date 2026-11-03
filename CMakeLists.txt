@@ -4,7 +4,7 @@
 # Purpose:  Top-level CMake lists file for p99
 #
 # Created:  4th July 2026
-# Updated:  27th October 2026
+# Updated:  3rd November 2026
 #
 # Home:     https://github.com/synesissoftware/p99
 #
@@ -232,14 +232,41 @@ if(P99_BUILD_TESTS)
 	# include/bundled-software/bdut/. Alternatively:
 	#
 	# * BDUT_ROOT (CMake or environment) — use that tree's include/;
-	# * find_package(BDUT) — use an installed BDUT::BDUT package;
-	# * otherwise — bundled include/bundled-software.
+	# * find_package(BDUT) — use an installed BDUT::BDUT package when its
+	#   header version is at least the bundled header;
+	# * otherwise — bundled include/bundled-software. An older installed
+	#   package is ignored so the tests keep the bundled macros.
 	#
 	# Unlike a global include_directories(), BDUT is attached only to test
 	# targets so the shipped library is unaffected.
 
 	set(P99_BDUT_PACKAGE_FOUND FALSE)
 	unset(P99_BDUT_INCLUDE_DIR)
+	set(_P99_BUNDLED_BDUT_DIR
+		"${CMAKE_CURRENT_SOURCE_DIR}/include/bundled-software"
+	)
+
+	function(p99_bdut_header_ver header out_ver)
+
+		file(READ "${header}" _text)
+		set(_acc 0)
+		set(_shift 24)
+		foreach(_name MAJOR MINOR PATCH RELSTATUS)
+
+			if(_text MATCHES "#[ \t]*define[ \t]+BDUT_VER_${_name}[ \t]+(0x[0-9A-Fa-f]+|[0-9]+)")
+
+				math(EXPR _part "${CMAKE_MATCH_1}")
+				math(EXPR _acc "${_acc} + (${_part} << ${_shift})")
+			endif()
+			math(EXPR _shift "${_shift} - 8")
+		endforeach()
+		set(${out_ver} "${_acc}" PARENT_SCOPE)
+	endfunction()
+
+	p99_bdut_header_ver(
+		"${_P99_BUNDLED_BDUT_DIR}/bdut/bdut.h"
+		_P99_BUNDLED_BDUT_VER
+	)
 
 	if(DEFINED BDUT_ROOT OR DEFINED ENV{BDUT_ROOT})
 
@@ -258,14 +285,45 @@ if(P99_BUILD_TESTS)
 
 		if(BDUT_FOUND)
 
-			message(STATUS "CMake package BDUT found (version ${BDUT_VERSION})")
-			set(P99_BDUT_PACKAGE_FOUND TRUE)
+			set(_p99_installed_bdut_h "")
+			if(TARGET BDUT::BDUT)
+
+				get_target_property(_p99_bdut_incs BDUT::BDUT INTERFACE_INCLUDE_DIRECTORIES)
+				foreach(_inc IN LISTS _p99_bdut_incs)
+
+					if(EXISTS "${_inc}/bdut/bdut.h")
+
+						set(_p99_installed_bdut_h "${_inc}/bdut/bdut.h")
+						break()
+					endif()
+				endforeach()
+			endif()
+
+			set(_p99_use_installed TRUE)
+			if(_p99_installed_bdut_h)
+
+				p99_bdut_header_ver("${_p99_installed_bdut_h}" _p99_installed_bdut_ver)
+				if(_p99_installed_bdut_ver LESS _P99_BUNDLED_BDUT_VER)
+
+					set(_p99_use_installed FALSE)
+					message(STATUS
+						"Installed BDUT is older than the bundled header; using bundled version"
+					)
+				endif()
+			endif()
+
+			if(_p99_use_installed)
+
+				message(STATUS "CMake package BDUT found (version ${BDUT_VERSION})")
+				set(P99_BDUT_PACKAGE_FOUND TRUE)
+			else()
+
+				set(P99_BDUT_INCLUDE_DIR "${_P99_BUNDLED_BDUT_DIR}")
+			endif()
 		else()
 
 			message(STATUS "CMake package BDUT not found; using bundled version")
-			set(P99_BDUT_INCLUDE_DIR
-				"${CMAKE_CURRENT_SOURCE_DIR}/include/bundled-software"
-			)
+			set(P99_BDUT_INCLUDE_DIR "${_P99_BUNDLED_BDUT_DIR}")
 		endif()
 	endif()
 
@@ -344,17 +402,13 @@ if(P99_BUILD_DOCS)
 
 	find_package(Doxygen REQUIRED)
 
-	set(DOXYGEN_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/docs")
-
-	configure_file(
-		"${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
-		"${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
-		@ONLY
-	)
-
+	# generate_doxygen.sh reads Doxyfile, overrides PROJECT_NUMBER from
+	# include/p99/p99.h, and writes <SIS_CMAKE_BUILD_DIR>/doxygen/html/.
 	add_custom_target(p99_docs
-		COMMAND "${DOXYGEN_EXECUTABLE}" "${CMAKE_BINARY_DIR}/Doxyfile"
-		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+		COMMAND ${CMAKE_COMMAND} -E env
+			SIS_CMAKE_BUILD_DIR=${CMAKE_BINARY_DIR}
+			${CMAKE_CURRENT_SOURCE_DIR}/generate_doxygen.sh
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMENT "Generating p99 API documentation (Doxygen)"
 		VERBATIM
 	)
