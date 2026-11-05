@@ -7,7 +7,7 @@
  * Home: https://github.com/synesissoftware/p99
  *
  * Created: 6th July 2026
- * Updated: 6th July 2026
+ * Updated: 6th November 2026
  *
  * @copyright Copyright (c) 2026, Matthew Wilson and Synesis Information
  *   Systems. Licensed under the 3-clause BSD License.
@@ -329,6 +329,6 @@ public: // accessors
 #endif /* C++ 20+ */
 };
 
-} /* namespace p99 */
+} // namespace p99
 
 #endif /* P99_HPP */
